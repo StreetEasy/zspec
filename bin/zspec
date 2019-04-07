@@ -1,0 +1,9 @@
+#!/usr/bin/env ruby
+lib = File.expand_path('../../lib', __FILE__)
+$:.unshift lib unless $:.include? lib
+
+require 'zspec/cli'
+
+ARGV.unshift(ZSpec::CLI.default_task) unless ZSpec::CLI.all_tasks.has_key?(ARGV[0])
+
+ZSpec::CLI.start
