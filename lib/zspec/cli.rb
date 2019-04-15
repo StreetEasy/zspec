@@ -1,20 +1,18 @@
 require "thor"
 require 'zspec'
 
-ZSpec.init
-
 module ZSpec
   class CLI < Thor
-    default_task :specs
-    desc "specs", ""
-    def specs(args)
-      ZSpec.specs(args)
+    default_task :queue_specs
+    desc "queue_specs", ""
+    def queue_specs(args)
+      ZSpec.queue_specs(args)
     end
-    
+
     desc "present", ""
     def present
       ZSpec.present
-    end    
+    end
 
     desc "work", ""
     def work
