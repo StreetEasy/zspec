@@ -80,7 +80,7 @@ module ZSpec
       end
 
       def indent(group_level)
-        '  ' * group_level
+        '.' + ('  ' * group_level)
       end
 
       def next_failure_index

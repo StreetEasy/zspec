@@ -3,7 +3,6 @@ module ZSpec
     require 'rspec/core/formatters/base_formatter'
     class Formatter < ::RSpec::Core::Formatters::BaseFormatter
       def close(_notification)
-        puts @current_example_group.to_json
         ZSpec.results_queue << @current_example_group.to_json
       end
 
