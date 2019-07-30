@@ -8,14 +8,12 @@ module ZSpec
 
       def example_group_started(notification)
         new_example_group = {description: notification.group.description, nested_groups: [], examples: []}
-        @current_example_group ||= new_example_group
 
-        if @current_example_group != new_example_group
-          @current_example_group[:nested_groups] << new_example_group
-          (@example_groups ||= []) << @current_example_group
-        end
+        @current_example_group[:nested_groups] << new_example_group unless @current_example_group.nil?
 
         @current_example_group = new_example_group
+
+        (@example_groups ||= []) << @current_example_group
       end
 
       def example_group_finished(notification)
