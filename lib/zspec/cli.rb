@@ -3,7 +3,6 @@ require 'zspec'
 
 module ZSpec
   class CLI < Thor
-    default_task :queue_specs
     desc "queue_specs", ""
     def queue_specs(args)
       ZSpec.queue_specs(args)
