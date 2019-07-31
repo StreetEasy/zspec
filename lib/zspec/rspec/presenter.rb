@@ -40,15 +40,15 @@ module ZSpec
         puts group_output(group_level, group)
 
         group["examples"].each do |example|
-          @example_count++
+          @example_count+=1
           if example["status"] == "passed"
             puts passed_output(group_level+1, example)
           elsif example["status"] == "failed"
-            @failure_count++
+            @failure_count+=1
             @failures << example
             puts failure_output(group_level+1, example)
           elsif example["status"] == "pending"
-            @pending_count++
+            @pending_count+=1
             puts pending_output(group_level+1, example)
           end
         end
