@@ -10,7 +10,6 @@ module ZSpec
       def configuration.command() 'rspec' end
       options.configure(configuration)
       configuration.files_to_run.uniq.map do |file|
-        puts "adding #{file}"
         ZSpec.redis.incr "spec_count"
         ZSpec.specs_queue << file.sub("#{Dir.pwd}/","")
       end
