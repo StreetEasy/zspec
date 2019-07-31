@@ -8,7 +8,6 @@ module ZSpec
         @example_count = 0
         @failure_count = 0
         @pending_count = 0
-        @errors_outside_of_examples_count = 0
       end
 
       def print_summary
@@ -16,7 +15,6 @@ module ZSpec
         puts "example_count: #{@example_count}"
         puts "failure_count: #{@failure_count}"
         puts "pending_count: #{@pending_count}"
-        puts "errors_outside_of_examples_count: #{@errors_outside_of_examples_count}"
         $stdout.flush
         if @failures.any?
           puts "FAILURES:"
@@ -32,13 +30,7 @@ module ZSpec
       end
 
       def present(results)
-        @example_count                    += results["summary"]["example_count"].to_i
-        @failure_count                    += results["summary"]["failure_count"].to_i
-        @pending_count                    += results["summary"]["pending_count"].to_i
-        @errors_outside_of_examples_count += results["summary"]["errors_outside_of_examples_count"].to_i
-
         format_example_groups(0, results)
-
         $stdout.flush
       end
 
@@ -48,12 +40,15 @@ module ZSpec
         puts group_output(group_level, group)
 
         group["examples"].each do |example|
+          @example_count++
           if example["status"] == "passed"
             puts passed_output(group_level+1, example)
           elsif example["status"] == "failed"
+            @failure_count++
             @failures << example
             puts failure_output(group_level+1, example)
           elsif example["status"] == "pending"
+            @pending_count++
             puts pending_output(group_level+1, example)
           end
         end

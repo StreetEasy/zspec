@@ -24,15 +24,6 @@ module ZSpec
         @current_example_group[:examples] << format_example(notification.example)
       end
 
-      def dump_summary(summary)
-        @current_example_group[:summary] = {
-          example_count: summary.example_count,
-          failure_count: summary.failure_count,
-          pending_count: summary.pending_count,
-          errors_outside_of_examples_count: summary.errors_outside_of_examples_count
-        }
-      end
-
       private
 
       def format_example(example)
@@ -59,7 +50,7 @@ module ZSpec
     end
 
     ::RSpec::Core::Formatters.register Formatter,
-      :close, :dump_summary, :example_group_started, :example_group_finished, :example_finished
+      :close, :example_group_started, :example_group_finished, :example_finished
   end
 end
 
