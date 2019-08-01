@@ -6,10 +6,15 @@ module ZSpec
         ZSpec.results_queue << @current_example_group.to_json
       end
 
+      def initialize(output)
+        super
+        @current_example_group = {nested_groups: [], examples: []}
+      end
+
       def example_group_started(notification)
         new_example_group = {description: notification.group.description, nested_groups: [], examples: []}
 
-        @current_example_group[:nested_groups] << new_example_group unless @current_example_group.nil?
+        @current_example_group[:nested_groups] << new_example_group
 
         @current_example_group = new_example_group
 
@@ -22,6 +27,15 @@ module ZSpec
 
       def example_finished(notification)
         @current_example_group[:examples] << format_example(notification.example)
+      end
+
+      def dump_summary(summary)
+        @output_hash[:summary] = {
+          example_count: summary.example_count,
+          failure_count: summary.failure_count,
+          pending_count: summary.pending_count,
+          errors_outside_of_examples_count: summary.errors_outside_of_examples_count
+        }
       end
 
       private
@@ -50,7 +64,7 @@ module ZSpec
     end
 
     ::RSpec::Core::Formatters.register Formatter,
-      :close, :example_group_started, :example_group_finished, :example_finished
+      :close, :dump_summary, :example_group_started, :example_group_finished, :example_finished
   end
 end
 

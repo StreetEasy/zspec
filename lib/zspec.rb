@@ -47,17 +47,13 @@ module ZSpec
     begin
       pid = fork do
         require '/app/config/application'
-        require '/app/spec/spec_helper.rb'
-
-        while @redis.get("spec_count").to_i > 0
-          @specs_queue.process(true) do |spec|
-            unless spec.nil?
-              puts "running: #{spec}"
-              ZSpec::RSpec.run(spec)
-              puts "completed: #{spec}"
-            end
-            true
+        @specs_queue.process do |spec|
+          unless spec.nil?
+            puts "running: #{spec}"
+            ZSpec::RSpec.run(spec)
+            puts "completed: #{spec}"
           end
+          true
         end
       end
 
