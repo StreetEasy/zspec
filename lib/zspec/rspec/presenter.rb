@@ -36,7 +36,7 @@ module ZSpec
         @failure_count                    += results["summary"]["failure_count"].to_i
         @pending_count                    += results["summary"]["pending_count"].to_i
         @errors_outside_of_examples_count += results["summary"]["errors_outside_of_examples_count"].to_i
-        format_example_groups(0, results) unless (results["examples"].empty? && results["nested_groups"].empty?)
+        format_example_groups(0, results) unless results["examples"].nil?
         $stdout.flush
       end
 
