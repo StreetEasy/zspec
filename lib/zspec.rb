@@ -33,7 +33,7 @@ module ZSpec
     presenter = ZSpec::RSpec::Presenter.new
     while @redis.get("spec_count").to_i > 0
       @results_queue.process(true) do |result|
-        unless result.nil? || result == "null"
+        unless result.nil?
           @redis.decr "spec_count"
           presenter.present(::JSON.parse(result))
         end
@@ -45,28 +45,26 @@ module ZSpec
 
   def self.work
     begin
-      pid = fork do
-        require '/app/config/application'
-        @specs_queue.process do |spec|
-          unless spec.nil?
-            puts "running: #{spec}"
+      require '/app/config/application'
+      @specs_queue.process do |spec|
+        unless spec.nil?
+          puts "running: #{spec}"
+          pid = fork do
             ZSpec::RSpec.run(spec)
-            puts "completed: #{spec}"
           end
-          true
+          Signal.trap("INT") do
+            Process.kill("KILL", pid)
+          end
+          Signal.trap("TERM") do
+            Process.kill("KILL", pid)
+          end
+          Process.wait(pid)
+          puts "completed: #{spec}"
         end
+        true
       end
-
-      Signal.trap("INT") do
-        Process.kill("KILL", pid)
-      end
-
-      Signal.trap("TERM") do
-        Process.kill("KILL", pid)
-      end
-
-      Process.wait(pid)
     ensure
+      puts "restoring queue"
       @specs_queue.refill
     end
   end

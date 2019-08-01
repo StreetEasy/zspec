@@ -6,19 +6,17 @@ module ZSpec
         ZSpec.results_queue << @current_example_group.to_json
       end
 
-      def initialize(output)
-        super
-        @current_example_group = {nested_groups: [], examples: []}
-      end
-
       def example_group_started(notification)
         new_example_group = {description: notification.group.description, nested_groups: [], examples: []}
 
-        @current_example_group[:nested_groups] << new_example_group
+        @current_example_group ||= new_example_group
+
+        if @current_example_group != new_example_group
+          @current_example_group[:nested_groups] << new_example_group
+          (@example_groups ||= []) << @current_example_group
+        end
 
         @current_example_group = new_example_group
-
-        (@example_groups ||= []) << @current_example_group
       end
 
       def example_group_finished(notification)
@@ -30,7 +28,8 @@ module ZSpec
       end
 
       def dump_summary(summary)
-        @output_hash[:summary] = {
+        @current_example_group ||= {}
+        @current_example_group[:summary] = {
           example_count: summary.example_count,
           failure_count: summary.failure_count,
           pending_count: summary.pending_count,
