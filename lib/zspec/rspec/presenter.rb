@@ -23,7 +23,7 @@ module ZSpec
           @failures.each do |example|
             puts ::RSpec::Core::Formatters::ConsoleCodes.wrap("#{example["description"]} " \
                               "(FAILED - #{next_failure_index})\n" \
-                              ".  Exception - #{example["exception"]["message"] unless example["exception"].nil?}",
+                              "Exception - #{example["exception"]["message"] unless example["exception"].nil?}",
                               :failure)
           end
           $stdout.flush
@@ -78,7 +78,11 @@ module ZSpec
       end
 
       def indent(group_level)
-        '.' + ('  ' * group_level)
+        if ENV["ZSPEC_ESCAPE_WHITESPACE"]
+          '&nbsp' * group_level
+        else
+          '  ' * group_level
+        end
       end
 
       def next_failure_index

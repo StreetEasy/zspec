@@ -44,28 +44,24 @@ module ZSpec
   end
 
   def self.work
-    begin
-      require '/app/config/application'
-      @specs_queue.process do |spec|
-        unless spec.nil?
-          puts "running: #{spec}"
-          pid = fork do
-            ZSpec::RSpec.run(spec)
-          end
-          Signal.trap("INT") do
-            Process.kill("KILL", pid)
-          end
-          Signal.trap("TERM") do
-            Process.kill("KILL", pid)
-          end
-          Process.wait(pid)
-          puts "completed: #{spec}"
+    require '/app/config/application'
+    @specs_queue.refill
+    @specs_queue.process do |spec|
+      unless spec.nil?
+        puts "running: #{spec}"
+        pid = fork do
+          ZSpec::RSpec.run(spec)
         end
-        true
+        Signal.trap("INT") do
+          Process.kill("KILL", pid)
+        end
+        Signal.trap("TERM") do
+          Process.kill("KILL", pid)
+        end
+        Process.wait(pid)
+        puts "completed: #{spec}"
       end
-    ensure
-      puts "restoring queue"
-      @specs_queue.refill
+      true
     end
   end
 end
