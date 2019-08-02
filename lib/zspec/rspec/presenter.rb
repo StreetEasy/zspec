@@ -79,7 +79,7 @@ module ZSpec
 
       def indent(group_level)
         if ENV["ZSPEC_ESCAPE_WHITESPACE"]
-          '&nbsp' * group_level
+          '&nbsp;' * group_level
         else
           '  ' * group_level
         end
