@@ -78,11 +78,7 @@ module ZSpec
       end
 
       def indent(group_level)
-        if ENV["ZSPEC_ESCAPE_WHITESPACE"]
-          '&nbsp;' * group_level
-        else
-          '  ' * group_level
-        end
+        '  ' * group_level
       end
 
       def next_failure_index
