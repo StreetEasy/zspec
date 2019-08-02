@@ -30,6 +30,8 @@ module ZSpec
       def dump_summary(summary)
         @current_example_group ||= {}
         @current_example_group[:summary] = {
+          duration: summary.duration,
+          file_path: @file_path,
           example_count: summary.example_count,
           failure_count: summary.failure_count,
           pending_count: summary.pending_count,
@@ -40,6 +42,7 @@ module ZSpec
       private
 
       def format_example(example)
+        @file_path ||= example.metadata[:file_path]
         hash = {
           :id => example.id,
           :description => example.description,
