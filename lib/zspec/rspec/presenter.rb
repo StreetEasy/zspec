@@ -20,7 +20,7 @@ module ZSpec
         puts "errors_outside_of_examples_count: #{@errors_outside_of_examples_count}"
 
         puts "LONGEST RUNNING FILES:"
-        @runtimes.sort_by{ |k,v| v }.take(5).each do |k,v|
+        @runtimes.sort_by{ |k,v| v }.reverse.take(10).each do |k,v|
           puts "#{k} took #{::RSpec::Core::Formatters::Helpers.format_duration(v)}"
         end
         $stdout.flush
