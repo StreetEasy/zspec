@@ -49,7 +49,7 @@ module ZSpec
     end
 
     def save_execution_runtimes
-      ZSpec.config.previous_execution_runtimes_key.set(@runtimes.sort_by{ |k,v| v }.reverse.take(30).to_h.to_json)
+      ZSpec.config.previous_execution_runtimes_key.set(@runtimes.to_json)
     end
 
     private
