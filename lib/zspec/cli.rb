@@ -1,5 +1,6 @@
 require "thor"
 require 'zspec'
+require 'active_support/inflector'
 
 module ZSpec
   class CLI < Thor
@@ -10,14 +11,13 @@ module ZSpec
 
     desc "queue_specs", ""
     def queue_specs(args)
-      ZSpec::Scheduler.new(args).enqueue
+      ZSpec.config.scheduler.schedule(args)
     end
 
     desc "present", ""
     def present
-      presenter = ZSpec::Presenter.new
+      presenter = ZSpec.config.presenter.constantize.new
       presenter.poll_results
-      presenter.save_execution_runtimes
       cleanup
       presenter.print_summary
     end
@@ -29,36 +29,58 @@ module ZSpec
 
     desc "connected", ""
     def connected
-      ZSpec.config.redis.connected?
+      redis.connected?
     end
 
     private
 
-    def cleanup
-      ZSpec.config.spec_count_key.clear
-    end
-
     def configure
       ZSpec.configure do |config|
-        build_number = ENV['ZSPEC_BUILD_NUMBER']
-        redis_host   = ENV["ZSPEC_REDIS_HOST"]
-        redis_port   = ENV["ZSPEC_REDIS_PORT"]
-        build_host   = ENV["HOSTNAME"]
-
-        config.redis = redis = ::Redis.new(host: redis_host, port: redis_port)
-        config.sink = sink = ZSpec::Sink::RedisSink.new(redis: redis)
-        config.previous_execution_runtimes_key = ZSpec::Key.new(sink: sink, key_name: "previous_execution_runtimes")
-        config.spec_count_key = ZSpec::Key.new(sink: sink, key_name: "#{build_number}.spec_count")
-        config.specs_queue = ZSpec::Queue.new(
+        config.presenter = presenter
+        config.formatter = formatter
+        config.sink = sink
+        config.queue = ZSpec::Queue.new(
           sink: sink,
-          queue_name: "#{build_number}.specs",
-          process_queue_name: "#{build_number}.specs.#{build_host}",
+          queue_name: "#{build_number}:queue",
+          timeout: timeout,
+          retries: retries,
         )
-        config.results_queue = ZSpec::Queue.new(
+        config.scheduler = ZSpec::Scheduler.new(
           sink: sink,
-          queue_name: "#{build_number}.results_queue",
         )
       end
+    end
+
+    def cleanup
+      ZSpec.config.queue.cleanup
+    end
+
+    def build_number
+      ENV['ZSPEC_BUILD_NUMBER']
+    end
+
+    def formatter
+      ENV["ZSPEC_FORMATTER"] || "ZSpec::Formatters::FailureListFormatter"
+    end
+
+    def presenter
+      ENV["ZSPEC_PRESENTER"] || "ZSpec::Presenters::FailureListPresenter"
+    end
+
+    def timeout
+      ENV["ZSPEC_TIMEOUT"] || 420
+    end
+
+    def retries
+      ENV["ZSPEC_RETRIES"] || 0
+    end
+
+    def sink
+      ZSpec::Sink::RedisSink.new(redis: redis)
+    end
+
+    def redis
+      Redis.new(host: ENV["ZSPEC_REDIS_HOST"], port: ENV["ZSPEC_REDIS_PORT"])
     end
   end
 end

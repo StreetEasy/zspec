@@ -2,23 +2,15 @@ module ZSpec
   class Worker
     def work
       require '/app/config/application'
-      ZSpec.config.specs_queue.refill
-      while (spec = ZSpec.config.specs_queue.pop)
-        unless spec.nil?
-          puts "running: #{spec}"
-          pid = fork do
-            run_specs(spec)
-          end
-          Signal.trap("INT") do
-            Process.kill("KILL", pid)
-          end
-          Signal.trap("TERM") do
-            Process.kill("KILL", pid)
-          end
-          Process.wait(pid)
-          ZSpec.config.specs_queue.commit
-          puts "completed: #{spec}"
+      ZSpec.config.queue.proccess_pending(1) do |spec|
+        puts "running: #{spec}"
+        ZSpec.config.spec_id = spec
+        fork do
+          run_specs(spec)
         end
+        ZSpec.config.spec_id = nil
+        Process.waitall
+        puts "completed: #{spec}"
       end
     end
 
@@ -26,7 +18,7 @@ module ZSpec
 
     def run_specs(spec)
       options = ::RSpec::Core::ConfigurationOptions.new([
-        "--format", "ZSpec::RSpec::Formatter", spec,
+        "--format", ZSpec.config.formatter, spec,
       ])
       runner = ::RSpec::Core::Runner.new(options)
       def runner.trap_interrupt() end

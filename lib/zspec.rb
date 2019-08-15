@@ -15,11 +15,10 @@ module ZSpec
   end
 
   require 'zspec/cli'
-  require 'zspec/key'
   require 'zspec/sink'
   require 'zspec/presenter'
+  require 'zspec/formatter'
   require 'zspec/queue'
-  require 'zspec/rspec'
   require 'zspec/scheduler'
   require 'zspec/worker'
 end

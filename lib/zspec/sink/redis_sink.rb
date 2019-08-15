@@ -5,40 +5,60 @@ module ZSpec
         @redis = options[:redis]
       end
 
-      def get(queue_name)
-        @redis.get queue_name
+      def time
+        @redis.time.first
       end
 
-      def set(queue_name, value)
-        @redis.set(queue_name, value)
+      def lpush(key, value)
+        @redis.lpush(key, value)
       end
 
-      def incr(queue_name)
-        @redis.incr queue_name
+      def brpoplpush(source, destination, timeout=0)
+        @redis.brpoplpush(source, destination, {timeout: timeout})
       end
 
-      def decr(queue_name)
-        @redis.decr queue_name
+      def brpop(key, timeout=0)
+        @redis.brpop(key, {timeout: timeout})
       end
 
-      def pop(queue_name)
-        @redis.lpop queue_name
+      def lrem(key, value)
+        @redis.lrem(key, 0, value)
       end
 
-      def push(queue_name, message)
-        @redis.rpush(queue_name, message)
+      def lrange(key, start, stop)
+        @redis.lrange(key, start, stop)
       end
 
-      def length(queue_name)
-        @redis.llen queue_name
+      def hget(key, field)
+        @redis.hget(key, field)
       end
 
-      def delete(queue_name, message)
-        @redis.lrem(queue_name, 0, message)
+      def hgetall(key)
+        @redis.hgetall(key)
       end
 
-      def clear(queue_name)
-        @redis.del queue_name
+      def hset(key, field, value)
+        @redis.hset(key, field, value)
+      end
+
+      def hdel(key, field)
+        @redis.hdel(key, field)
+      end
+
+      def incr(key)
+        @redis.incr(key)
+      end
+
+      def decr(key)
+        @redis.decr(key)
+      end
+
+      def get(key)
+        @redis.get(key)
+      end
+
+      def del(key)
+        @redis.del(key)
       end
     end
   end

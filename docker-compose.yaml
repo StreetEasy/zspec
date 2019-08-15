@@ -1,0 +1,18 @@
+version: "3"
+services:
+  redis:
+    image: redis
+    expose:
+    - 6379
+
+  ruby:
+    image: ruby
+    volumes:
+    - ./:/app
+    depends_on:
+    - redis
+    working_dir: /app
+    environment:
+      ZSPEC_REDIS_HOST: redis
+      ZSPEC_REDIS_PORT: '6379'
+      ZSPEC_BUILD_NUMBER: '1'
