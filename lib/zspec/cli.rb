@@ -10,7 +10,7 @@ module ZSpec
     end
 
     desc "queue_specs", ""
-    def queue_specs(args)
+    def queue_specs(*args)
       ZSpec.config.scheduler.schedule(args)
     end
 
