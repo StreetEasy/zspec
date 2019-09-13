@@ -14,6 +14,9 @@ module ZSpec
 
       def dump_summary(summary)
         @duration = summary.duration
+        if summary.errors_outside_of_examples_count.to_i > 0
+          @failed = true
+        end
         @output_hash[:summary] = {
           duration: summary.duration,
           load_time: summary.load_time,
