@@ -9,6 +9,10 @@ module ZSpec
         @redis.time.first
       end
 
+      def llen(key)
+        @redis.llen(key)
+      end
+
       def lpush(key, value)
         @redis.lpush(key, value)
       end

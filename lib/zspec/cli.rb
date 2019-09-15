@@ -43,6 +43,7 @@ module ZSpec
           sink: sink,
           queue_name: "#{build_number}:queue",
           timeout: timeout,
+          shutdown: shutdown,
           retries: retries,
         )
         config.scheduler = ZSpec::Scheduler.new(
@@ -69,6 +70,10 @@ module ZSpec
 
     def timeout
       ENV["ZSPEC_TIMEOUT"] || 420
+    end
+
+    def shutdown
+      ENV["ZSPEC_SHUTDOWN"] || 10
     end
 
     def retries

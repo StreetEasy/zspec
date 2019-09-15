@@ -1,15 +1,17 @@
 module ZSpec
   class Queue
     def initialize(options = {})
-      @sink               = options[:sink]
-      @timeout            = options[:timeout].to_i
-      @retries            = options[:retries].to_i
-      @counter_name       = options[:queue_name] + ":count"
-      @pending_queue_name = options[:queue_name] + ":pending"
-      @process_queue_name = options[:queue_name] + ":processing"
-      @done_queue_name    = options[:queue_name] + ":done"
-      @metadata_hash_name = options[:queue_name] + ":metadata"
-      @runtime_hash_name  = "runtimes"
+      @sink                 = options[:sink]
+      @timeout              = options[:timeout].to_i
+      @shutdown             = options[:shutdown].to_i
+      @retries              = options[:retries].to_i
+      @counter_name         = options[:queue_name] + ":count"
+      @pending_queue_name   = options[:queue_name] + ":pending"
+      @process_queue_name   = options[:queue_name] + ":processing"
+      @done_queue_name      = options[:queue_name] + ":done"
+      @workers_queue_name   = options[:queue_name] + ":workers"
+      @metadata_hash_name   = options[:queue_name] + ":metadata"
+      @runtime_hash_name    = "runtimes"
     end
 
     def cleanup
@@ -17,6 +19,7 @@ module ZSpec
       @sink.del(@pending_queue_name)
       @sink.del(@process_queue_name)
       @sink.del(@done_queue_name)
+      @sink.del(@workers_queue_name)
       @sink.del(@metadata_hash_name)
     end
 
@@ -27,6 +30,9 @@ module ZSpec
 
     def proccess_pending(timeout = 0)
       while proccessing? do
+        break if is_shutdown?(worker_name)
+        register_worker(worker_name)
+
         message = @sink.brpoplpush(@pending_queue_name, @process_queue_name, timeout)
         next if message.nil? || message.empty?
 
@@ -34,11 +40,15 @@ module ZSpec
 
         yield(message)
       end
+
+      clear_worker(worker_name)
     end
 
     def proccess_done(timeout = 0)
       while proccessing? do
         expire_proccessing
+        expire_workers
+        shutdown_excess_workers
 
         _list, message = @sink.brpop(@done_queue_name, timeout)
         next if message.nil? || message.empty?
@@ -67,7 +77,7 @@ module ZSpec
 
     def expire_proccessing
       @sink.lrange(@process_queue_name, 0, -1).each do |message|
-        if is_expired?(message)
+        if is_expired?(message, @timeout)
           @sink.lrem(@process_queue_name, message)
           @sink.lpush(@pending_queue_name, message)
           @sink.hdel(@metadata_hash_name, timeout_key(message))
@@ -75,9 +85,47 @@ module ZSpec
       end
     end
 
-    def is_expired?(message)
-      proccess_time = @sink.hget(@metadata_hash_name, timeout_key(message)).to_i
-      (@sink.time - proccess_time) > @timeout
+    def expire_workers
+      @sink.lrange(@workers_queue_name, 0, -1).each do |key|
+        clear_worker(key) if is_expired?(key, @shutdown)
+      end
+    end
+
+    def shutdown_excess_workers
+      jobs = @sink.get(@counter_name).to_i
+      worker_count = @sink.llen(@workers_queue_name)
+
+      if worker_count > jobs
+        puts "jobs #{jobs}\nworkers #{worker_count}\nshutting down #{worker_count - jobs} workers"
+        @sink.lrange(@workers_queue_name, 0, worker_count - jobs - 1).each do |key|
+          @sink.hset(@metadata_hash_name, status_key(key), "shutdown")
+        end
+      end
+    end
+
+    def worker_name
+      ENV['WORKER_NAME']
+    end
+
+    def is_shutdown?(key)
+      @sink.hget(@metadata_hash_name, status_key(key)) == "shutdown"
+    end
+
+    def clear_worker(key)
+      @sink.lrem(@workers_queue_name, key)
+      @sink.hdel(@metadata_hash_name, status_key(key))
+      @sink.hdel(@metadata_hash_name, timeout_key(key))
+    end
+
+    def register_worker(key)
+      @sink.lpush(@workers_queue_name, key)
+      @sink.hset(@metadata_hash_name, status_key(key), "running")
+      @sink.hset(@metadata_hash_name, timeout_key(key), @sink.time)
+    end
+
+    def is_expired?(key, timeout)
+      time = @sink.hget(@metadata_hash_name, timeout_key(key)).to_i
+      (@sink.time - time) > timeout
     end
 
     def retry_message(message, count)
@@ -98,6 +146,10 @@ module ZSpec
 
     def proccessing?
       @sink.get(@counter_name).to_i > 0
+    end
+
+    def status_key(message)
+      "#{message}:status"
     end
 
     def timeout_key(message)
