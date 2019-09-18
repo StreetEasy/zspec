@@ -18,7 +18,7 @@ module ZSpec
 
     def run_specs(spec)
       options = ::RSpec::Core::ConfigurationOptions.new([
-        "--format", ZSpec.config.formatter, spec,
+        "--backtrace", "--format", ZSpec.config.formatter, spec,
       ])
       runner = ::RSpec::Core::Runner.new(options)
       def runner.trap_interrupt() end

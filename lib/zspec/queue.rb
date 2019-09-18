@@ -13,11 +13,11 @@ module ZSpec
     end
 
     def cleanup
-      @sink.del(@counter_name)
-      @sink.del(@pending_queue_name)
-      @sink.del(@process_queue_name)
-      @sink.del(@done_queue_name)
-      @sink.del(@metadata_hash_name)
+      @sink.expire(@counter_name, 1800)
+      @sink.expire(@pending_queue_name, 1800)
+      @sink.expire(@process_queue_name, 1800)
+      @sink.expire(@done_queue_name, 1800)
+      @sink.expire(@metadata_hash_name, 1800)
     end
 
     def enqueue(message)
