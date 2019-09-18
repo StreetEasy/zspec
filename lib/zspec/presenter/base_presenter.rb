@@ -41,32 +41,45 @@ module ZSpec
         @runtimes.sort_by{ |h| h[:duration] }.reverse.take(10).each do |h|
           puts "#{h[:file_path]} finished in #{format_duration(h[:duration])} " \
                "(file took #{format_duration(h[:load_time])} to load)\n"
-
         end
 
         $stdout.flush
 
         if @failures.any?
-          puts "FIRST 10 FAILURES:"
-          @failures.take(10).each_with_index do |example, index|
+          puts "FIRST #{ZSpec.config.failure_count} FAILURES:"
+          @failures.take(ZSpec.config.failure_count).each_with_index do |example, index|
             puts wrap("#{example["id"]}\n" \
                       "#{example["description"]} (FAILED - #{index+1})\n" \
-                      "Exception - #{truncated_exception(example)}\n", :failure)
+                      "Exception - #{truncated(message_or_default(example))}\n" \
+                      "Backtrace - #{truncated(backtrace_or_default(example))}\n",
+                      :failure)
           end
           $stdout.flush
+          exit(1)
+        end
+
+        if @errors_outside_of_examples_count > 0
           exit(1)
         end
       end
 
       private
 
-      def truncated_exception(example)
-        max_length = 1_000
-        unless example["exception"].nil?
-          if example["exception"]["message"].length < max_length
-            example["exception"]["message"]
+      def message_or_default(example)
+        example["exception"].nil? ? "" : example["exception"]["message"]
+      end
+
+      def backtrace_or_default(example)
+        example["exception"].nil? ? "" : example["exception"]["backtrace"]
+      end
+
+      def truncated(message)
+        max_length = ZSpec.config.truncate_length
+        unless message.empty?
+          if message.length < max_length
+            message
           else
-            example["exception"]["message"].slice(0..max_length) + '... (truncated)'
+            message.slice(0..max_length) + '... (truncated)'
           end
         end
       end

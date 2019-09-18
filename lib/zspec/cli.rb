@@ -38,6 +38,8 @@ module ZSpec
       ZSpec.configure do |config|
         config.presenter = presenter
         config.formatter = formatter
+        config.failure_count = failure_count
+        config.truncate_length = truncate_length
         config.sink = sink
         config.queue = ZSpec::Queue.new(
           sink: sink,
@@ -73,6 +75,14 @@ module ZSpec
 
     def retries
       ENV["ZSPEC_RETRIES"] || 0
+    end
+
+    def failure_count
+      ENV["ZSPEC_FAILURE_COUNT"] || 25
+    end
+
+    def truncate_length
+      ENV["ZSPEC_TRUNCATE_LENGTH"] || 2_000
     end
 
     def sink

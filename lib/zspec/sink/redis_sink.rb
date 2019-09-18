@@ -9,6 +9,10 @@ module ZSpec
         @redis.time.first
       end
 
+      def expire(key, seconds)
+        @redis.expire(key, seconds)
+      end
+
       def lpush(key, value)
         @redis.lpush(key, value)
       end

@@ -3,7 +3,7 @@ module ZSpec
     def initialize(options = {})
       @sink                = options[:sink]
       @runtimes_hash_name  = "runtimes"
-      @runtimes = @sink.hgetall(@runtimes_hash_name)
+      @runtimes            = @sink.hgetall(@runtimes_hash_name)
     end
 
     def schedule(args)
