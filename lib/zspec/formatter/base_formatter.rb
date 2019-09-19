@@ -12,6 +12,12 @@ module ZSpec
         @failed = true
       end
 
+      def stop(notification)
+        @ids = notification.examples.map do |example|
+          example.metadata[:scoped_id]
+        end
+      end
+
       def dump_summary(summary)
         @duration = summary.duration
         if summary.errors_outside_of_examples_count.to_i > 0
@@ -29,10 +35,14 @@ module ZSpec
       end
 
       def close(_notification)
+        ZSpec.config.scheduler.resolve(
+          ZSpec.config.spec_id,
+          @duration,
+          @ids,
+        ) unless @failed
         ZSpec.config.queue.resolve(
           @failed,
           ZSpec.config.spec_id,
-          @duration,
           @output_hash.to_json,
         )
       end
@@ -59,7 +69,7 @@ module ZSpec
       end
 
       ::RSpec::Core::Formatters.register self,
-        :close, :dump_summary, :example_failed
+        :close, :dump_summary, :stop, :example_failed
     end
   end
 end
