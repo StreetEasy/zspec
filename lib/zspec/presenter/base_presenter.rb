@@ -43,6 +43,12 @@ module ZSpec
                "(file took #{format_duration(h[:load_time])} to load)\n"
         end
 
+        puts "FLAKY SPECS:"
+        ZSpec.config.queue.flaky_specs.take(ZSpec.config.failure_count).each do |failure|
+          puts "#{failure[:message]} failed #{failure[:count])} times." \
+                "last failure was #{humanize(failure[:last_failure])} ago."
+        end
+
         $stdout.flush
 
         if @failures.any?
@@ -51,7 +57,7 @@ module ZSpec
             puts wrap("#{example["id"]}\n" \
                       "#{example["description"]} (FAILED - #{index+1})\n" \
                       "Exception - #{truncated(message_or_default(example))}\n" \
-                      "Backtrace - #{truncated(backtrace_or_default(example))}\n",
+                      "Backtrace - #{truncated(backtrace_or_default(example).join("\n"))}\n",
                       :failure)
           end
           $stdout.flush
@@ -64,6 +70,15 @@ module ZSpec
       end
 
       private
+
+      def humanize(secs)
+        [[60, :seconds], [60, :minutes], [24, :hours], [Float::INFINITY, :days]].map{ |count, name|
+          if secs > 0
+            secs, n = secs.divmod(count)
+            "#{n.to_i} #{name}" unless n.to_i==0
+          end
+        }.compact.reverse.join(' ')
+      end
 
       def message_or_default(example)
         example["exception"].nil? ? "" : example["exception"]["message"]

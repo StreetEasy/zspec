@@ -40,6 +40,7 @@ module ZSpec
         config.formatter = formatter
         config.failure_count = failure_count
         config.truncate_length = truncate_length
+        config.flaky_spec_threshold = flaky_spec_threshold
         config.sink = sink
         config.queue = ZSpec::Queue.new(
           sink: sink,
@@ -83,6 +84,10 @@ module ZSpec
 
     def truncate_length
       ENV["ZSPEC_TRUNCATE_LENGTH"] || 2_000
+    end
+
+    def flaky_spec_threshold
+      ENV["ZSPEC_FLAKY_SPEC_THRESHOLD"] || 60 * 60 * 24 * 14
     end
 
     def sink
