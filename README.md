@@ -21,6 +21,7 @@ Then the client runs `zspec present` which polls redis for completed specs, for 
 # FAQ
 
 Issue: My ZSpec build is stuck in the images state for more than 30 minutes. 
+
 Remediation:
 1) Click the Cancel button on the build in Drone
 2) Click the Restart button on the build in Drone
