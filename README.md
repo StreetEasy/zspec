@@ -17,3 +17,10 @@ The client (in this case drone) queues up the specs by running `zspec queue_spec
 Then the client runs `zspec present` which polls redis for completed specs, for each non-duplicate completed spec, it stores the result in memory and decrements the counter. Once the counter hits 0 it exits the loop and prints the results.
 
 ![workflow](https://github.com/StreetEasy/zspec/blob/master/workflow.png "Workflow")
+
+# FAQ
+
+Issue: My ZSpec build is stuck in the images state for more than 30 minutes. 
+Remediation:
+1) Click the Cancel button on the build in Drone
+2) Click the Restart button on the build in Drone
