@@ -44,6 +44,7 @@ module ZSpec
         end
 
         puts "FLAKY SPECS:"
+        puts ZSpec.config.queue.flaky_specs
         ZSpec.config.queue.flaky_specs.take(ZSpec.config.failure_count).each do |failure|
           puts "#{failure["message"]} failed #{failure["count"]} times. " \
                "last failure was #{humanize(failure["last_failure"])} ago.\n"
