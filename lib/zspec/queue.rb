@@ -108,7 +108,7 @@ module ZSpec
 
     def track_failure(message)
       failure = JSON.parse(@sink.hget(@failure_hash_name, message) || "{\"count\":0}")
-      failure.merge!({"message": message, "last_failure": @sink.time, "count": failure[:count].to_i+1 })
+      failure.merge!({"message": message, "last_failure": @sink.time, "count": failure["count"].to_i+1 })
       @sink.hset(@failure_hash_name, message, failure.to_json)
     end
 
