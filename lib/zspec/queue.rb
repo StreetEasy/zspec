@@ -67,7 +67,7 @@ module ZSpec
     end
 
     def flaky_specs
-      @sink.hgetall(@failure_hash_name).map { |message, failure| JSON.parse(failure) }
+      @sink.hgetall(@failure_hash_name).map { |failure, message| JSON.parse(message) }
       .select { |failure| (@sink.time - failure["last_failure"].to_i) < @flaky_threshold }
       .sort_by{ |failure| failure["count"] }
       .reverse
