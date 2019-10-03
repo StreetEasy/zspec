@@ -46,6 +46,7 @@ module ZSpec
           queue_name: "#{build_number}:queue",
           timeout: timeout,
           retries: retries,
+          flaky_threshold: flaky_threshold,
         )
         config.scheduler = ZSpec::Scheduler.new(
           sink: sink,
@@ -83,6 +84,10 @@ module ZSpec
 
     def truncate_length
       ENV["ZSPEC_TRUNCATE_LENGTH"] || 2_000
+    end
+
+    def flaky_threshold
+      ENV["ZSPEC_FLAKY_THRESHOLD"] || 60 * 60 * 24 * 14
     end
 
     def sink
