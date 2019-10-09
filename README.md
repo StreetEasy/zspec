@@ -18,10 +18,16 @@ Then the client runs `zspec present` which polls redis for completed specs, for 
 
 ![workflow](https://github.com/StreetEasy/zspec/blob/master/workflow.png "Workflow")
 
-# FAQ
+# Having an Issue?
 
 Issue: My ZSpec build is stuck in the images state for more than 30 minutes. 
 
 Remediation:
 1) Click the Cancel button on the build in Drone
 2) Click the Restart button on the build in Drone
+
+# FAQ
+
+1) Drone provides an output of frequent flaky specs after each test run. How do I reproduce a flaky spec identified in that report?
+
+The unit of work in ZSpec is an individual spec file. Based on ZSpecs architecture, each spec file is run in isolation and not subject to possible polluted data from other files.  To reproduce a spec, run the file mentioned in the report with rspec in your local development environment.
