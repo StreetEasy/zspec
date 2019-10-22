@@ -85,7 +85,7 @@ module ZSpec
       end
 
       def backtrace_or_default(example)
-        example["exception"].nil? ? "" : example["exception"]["backtrace"]
+        example["exception"].dig("exception", "backtrace") || ""
       end
 
       def truncated(message)
