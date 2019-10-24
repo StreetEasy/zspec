@@ -81,11 +81,11 @@ module ZSpec
       end
 
       def message_or_default(example)
-        example["exception"].nil? ? "" : example["exception"]["message"]
+        example.dig("exception", "message") || ""
       end
 
       def backtrace_or_default(example)
-        example["exception"].nil? ? "" : example["exception"]["backtrace"]
+        example.dig("exception", "backtrace") || []
       end
 
       def truncated(message)
