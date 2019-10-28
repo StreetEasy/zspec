@@ -5,6 +5,7 @@ module ZSpec
         ::RSpec::configuration.tty = true
         ::RSpec::configuration.color = true
         @failures = []
+        @errors_outside_of_examples = []
         @runtimes = []
         @example_count = 0
         @failure_count = 0
@@ -19,15 +20,8 @@ module ZSpec
       end
 
       def present(results)
-        @example_count                    += results["summary"]["example_count"].to_i
-        @failure_count                    += results["summary"]["failure_count"].to_i
-        @pending_count                    += results["summary"]["pending_count"].to_i
-        @errors_outside_of_examples_count += results["summary"]["errors_outside_of_examples_count"].to_i
-        @runtimes << {
-          file_path: results["summary"]["file_path"],
-          duration:  results["summary"]["duration"],
-          load_time: results["summary"]["load_time"],
-        }
+        increment_counts(results)
+        track_runtimes(results)
       end
 
       def print_summary
@@ -64,12 +58,31 @@ module ZSpec
           exit(1)
         end
 
-        if @errors_outside_of_examples_count > 0
+        if @errors_outside_of_examples.any?
+          puts "ERRORS OUTSIDE OF EXAMPLES:"
+          @errors_outside_of_examples.each do |h|
+            puts "#{h[:file_path]} had #{h[:error_count]} errors."
+          $stdout.flush
           exit(1)
         end
       end
 
       private
+
+      def increment_counts(results)
+        @example_count                    += results["summary"]["example_count"].to_i
+        @failure_count                    += results["summary"]["failure_count"].to_i
+        @pending_count                    += results["summary"]["pending_count"].to_i
+        @errors_outside_of_examples_count += results["summary"]["errors_outside_of_examples_count"].to_i
+      end
+
+      def track_runtimes(results)
+        @runtimes << {
+          file_path: results["summary"]["file_path"],
+          duration:  results["summary"]["duration"],
+          load_time: results["summary"]["load_time"],
+        }
+      end
 
       def humanize(secs)
         [[60, :seconds], [60, :minutes], [24, :hours], [Float::INFINITY, :days]].map{ |count, name|
