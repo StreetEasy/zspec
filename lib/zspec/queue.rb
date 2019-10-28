@@ -73,6 +73,10 @@ module ZSpec
       .reverse
     end
 
+    def store_stderr(message, data)
+      @sink.hset(@metadata_hash_name, stderr_key(message), data)
+    end
+
     private
 
     def expire_proccessing
@@ -130,6 +134,10 @@ module ZSpec
 
     def dedupe_key(message)
       "#{message}:dedupe"
+    end
+
+    def stderr_key(message)
+      "#{message}:stderr"
     end
   end
 end
