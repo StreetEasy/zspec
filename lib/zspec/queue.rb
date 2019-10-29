@@ -59,12 +59,12 @@ module ZSpec
       end
     end
 
-    def resolve(failed, message, runtime, results)
+    def resolve(failed, message, runtime, results, stdout)
       track_failure(message) if failed
       if failed && (count = retry_count(message)) && (count < @retries)
         retry_message(message, count)
       else
-        resolve_message(message, runtime, results)
+        resolve_message(message, runtime, results, stdout)
       end
     end
 
@@ -73,10 +73,6 @@ module ZSpec
       .select { |failure| (@sink.time - failure["last_failure"].to_i) < @flaky_threshold }
       .sort_by{ |failure| failure["count"] }
       .reverse
-    end
-
-    def store_stdout(message, data)
-      @sink.hset(@metadata_hash_name, stdout_key(message), data)
     end
 
     private
@@ -101,8 +97,9 @@ module ZSpec
       @sink.hset(@metadata_hash_name, retry_key(message), count+1)
     end
 
-    def resolve_message(message, runtime, results)
+    def resolve_message(message, runtime, results, stdout)
       @sink.hset(@runtime_hash_name, message, runtime)
+      @sink.hset(@metadata_hash_name, stdout_key(message), stdout)
       @sink.hset(@metadata_hash_name, results_key(message), results)
       @sink.lrem(@process_queue_name, message)
       @sink.lpush(@done_queue_name, message)

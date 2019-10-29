@@ -24,7 +24,7 @@ module ZSpec
         @failure_count                    += results["summary"]["failure_count"].to_i
         @pending_count                    += results["summary"]["pending_count"].to_i
         @errors_outside_of_examples_count += results["summary"]["errors_outside_of_examples_count"].to_i
-        @errors_outside_of_examples << stdout unless stdout.empty? || results["summary"]["errors_outside_of_examples_count"].to_i == 0
+        @errors_outside_of_examples << stdout unless stdout.nil? || stdout.empty?
         @runtimes << {
           file_path: results["summary"]["file_path"],
           duration:  results["summary"]["duration"],
