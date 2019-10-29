@@ -22,9 +22,9 @@ module ZSpec
       ])
       runner = ::RSpec::Core::Runner.new(options)
       def runner.trap_interrupt() end
-      stderr = StringIO.new
-      runner.run(stderr, $stdout)
-      ZSpec.config.queue.store_stderr(spec, stderr.string)
+      stdout = StringIO.new
+      runner.run($stderr, stdout)
+      ZSpec.config.queue.store_stdout(spec, stdout.string)
     end
   end
 end

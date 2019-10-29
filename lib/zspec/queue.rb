@@ -73,8 +73,8 @@ module ZSpec
       .reverse
     end
 
-    def store_stderr(message, data)
-      @sink.hset(@metadata_hash_name, stderr_key(message), data)
+    def store_stdout(message, data)
+      @sink.hset(@metadata_hash_name, stdout_key(message), data)
     end
 
     private
@@ -136,8 +136,8 @@ module ZSpec
       "#{message}:dedupe"
     end
 
-    def stderr_key(message)
-      "#{message}:stderr"
+    def stdout_key(message)
+      "#{message}:stdout"
     end
   end
 end
