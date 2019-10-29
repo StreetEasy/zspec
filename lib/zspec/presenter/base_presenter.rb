@@ -59,7 +59,7 @@ module ZSpec
 
         if @errors_outside_of_examples.any?
           puts "FIRST #{ZSpec.config.failure_count} ERRORS OUTSIDE OF EXAMPLES:"
-          @errors_outside_of_examples.take(ZSpec.config.failure_count).each do |example|
+          @errors_outside_of_examples.take(ZSpec.config.failure_count).each do |message|
             puts message
           end
         end
