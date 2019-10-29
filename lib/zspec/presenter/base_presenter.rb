@@ -55,15 +55,16 @@ module ZSpec
                       "Backtrace - #{truncated(backtrace_or_default(example).join("\n"))}\n",
                       :failure)
           end
-          $stdout.flush
-          exit(1)
         end
 
         if @errors_outside_of_examples.any?
-          puts "ERRORS OUTSIDE OF EXAMPLES:"
-          @errors_outside_of_examples.each do |message|
+          puts "FIRST #{ZSpec.config.failure_count} ERRORS OUTSIDE OF EXAMPLES:"
+          @errors_outside_of_examples.take(ZSpec.config.failure_count).each do |example|
             puts message
           end
+        end
+
+        if @failures.any? || @errors_outside_of_examples.any?
           $stdout.flush
           exit(1)
         end
