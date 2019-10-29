@@ -50,19 +50,21 @@ module ZSpec
         results = @sink.hget(@metadata_hash_name, results_key(message))
         next if results.nil? || results.empty?
 
-        yield(results)
+        stdout = @sink.hget(@metadata_hash_name, stdout_key(message))
+
+        yield(results, stdout)
 
         @sink.hset(@metadata_hash_name, dedupe_key(message), true)
         @sink.decr(@counter_name)
       end
     end
 
-    def resolve(failed, message, runtime, results)
+    def resolve(failed, message, runtime, results, stdout)
       track_failure(message) if failed
       if failed && (count = retry_count(message)) && (count < @retries)
         retry_message(message, count)
       else
-        resolve_message(message, runtime, results)
+        resolve_message(message, runtime, results, stdout)
       end
     end
 
@@ -95,8 +97,9 @@ module ZSpec
       @sink.hset(@metadata_hash_name, retry_key(message), count+1)
     end
 
-    def resolve_message(message, runtime, results)
+    def resolve_message(message, runtime, results, stdout)
       @sink.hset(@runtime_hash_name, message, runtime)
+      @sink.hset(@metadata_hash_name, stdout_key(message), stdout)
       @sink.hset(@metadata_hash_name, results_key(message), results)
       @sink.lrem(@process_queue_name, message)
       @sink.lpush(@done_queue_name, message)
@@ -130,6 +133,10 @@ module ZSpec
 
     def dedupe_key(message)
       "#{message}:dedupe"
+    end
+
+    def stdout_key(message)
+      "#{message}:stdout"
     end
   end
 end

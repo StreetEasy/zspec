@@ -5,6 +5,7 @@ module ZSpec
         ::RSpec::configuration.tty = true
         ::RSpec::configuration.color = true
         @failures = []
+        @errors_outside_of_examples = []
         @runtimes = []
         @example_count = 0
         @failure_count = 0
@@ -13,21 +14,15 @@ module ZSpec
       end
 
       def poll_results
-        ZSpec.config.queue.proccess_done(1) do |results|
-          present(::JSON.parse(results))
+        ZSpec.config.queue.proccess_done(1) do |results, stdout|
+          present(::JSON.parse(results), stdout)
         end
       end
 
-      def present(results)
-        @example_count                    += results["summary"]["example_count"].to_i
-        @failure_count                    += results["summary"]["failure_count"].to_i
-        @pending_count                    += results["summary"]["pending_count"].to_i
-        @errors_outside_of_examples_count += results["summary"]["errors_outside_of_examples_count"].to_i
-        @runtimes << {
-          file_path: results["summary"]["file_path"],
-          duration:  results["summary"]["duration"],
-          load_time: results["summary"]["load_time"],
-        }
+      def present(results, stdout)
+        track_counts(results)
+        track_errors_outside_of_examples(results, stdout)
+        track_runtimes(results)
       end
 
       def print_summary
@@ -60,16 +55,41 @@ module ZSpec
                       "Backtrace - #{truncated(backtrace_or_default(example).join("\n"))}\n",
                       :failure)
           end
-          $stdout.flush
-          exit(1)
         end
 
-        if @errors_outside_of_examples_count > 0
+        if @errors_outside_of_examples.any?
+          puts "FIRST #{ZSpec.config.failure_count} ERRORS OUTSIDE OF EXAMPLES:"
+          @errors_outside_of_examples.take(ZSpec.config.failure_count).each do |message|
+            puts wrap(truncated(message), :failure)
+          end
+        end
+
+        if @failures.any? || @errors_outside_of_examples.any?
+          $stdout.flush
           exit(1)
         end
       end
 
       private
+
+      def track_counts(results)
+        @example_count                    += results["summary"]["example_count"].to_i
+        @failure_count                    += results["summary"]["failure_count"].to_i
+        @pending_count                    += results["summary"]["pending_count"].to_i
+        @errors_outside_of_examples_count += results["summary"]["errors_outside_of_examples_count"].to_i
+      end
+
+      def track_errors_outside_of_examples(results, stdout)
+        @errors_outside_of_examples << stdout unless stdout.nil? || stdout.empty? || results["summary"]["errors_outside_of_examples_count"].to_i == 0
+      end
+
+      def track_runtimes(results)
+       @runtimes << {
+          file_path: results["summary"]["file_path"],
+          duration:  results["summary"]["duration"],
+          load_time: results["summary"]["load_time"],
+        }
+      end
 
       def humanize(secs)
         [[60, :seconds], [60, :minutes], [24, :hours], [Float::INFINITY, :days]].map{ |count, name|

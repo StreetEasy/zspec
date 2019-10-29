@@ -5,10 +5,12 @@ module ZSpec
       ZSpec.config.queue.proccess_pending(1) do |spec|
         puts "running: #{spec}"
         ZSpec.config.spec_id = spec
+        ZSpec.config.stdout = stdout = StringIO.new
         fork do
-          run_specs(spec)
+          run_specs(spec, stdout)
         end
         ZSpec.config.spec_id = nil
+        ZSpec.config.stdout = nil
         Process.waitall
         puts "completed: #{spec}"
       end
@@ -16,13 +18,13 @@ module ZSpec
 
     private
 
-    def run_specs(spec)
+    def run_specs(spec, stdout)
       options = ::RSpec::Core::ConfigurationOptions.new([
         "--backtrace", "--format", ZSpec.config.formatter, spec,
       ])
       runner = ::RSpec::Core::Runner.new(options)
       def runner.trap_interrupt() end
-      runner.run($stderr, $stdout)
+      runner.run($stderr, stdout)
     end
   end
 end
