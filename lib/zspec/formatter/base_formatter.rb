@@ -34,6 +34,7 @@ module ZSpec
           ZSpec.config.spec_id,
           @duration,
           @output_hash.to_json,
+          ZSpec.config.stdout.string,
         )
       end
 

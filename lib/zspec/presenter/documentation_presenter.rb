@@ -1,7 +1,7 @@
 module ZSpec
   module Presenters
     class DocumentationPresenter < ZSpec::Presenters::BasePresenter
-      def present(results)
+      def present(results, stdout)
         super
         format_results(results) if results["examples"]
       end
