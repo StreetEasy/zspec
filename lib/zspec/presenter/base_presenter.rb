@@ -5,6 +5,7 @@ module ZSpec
         ::RSpec::configuration.tty = true
         ::RSpec::configuration.color = true
         @failures = []
+        @errors_outside_of_examples = []
         @runtimes = []
         @example_count = 0
         @failure_count = 0
@@ -13,16 +14,17 @@ module ZSpec
       end
 
       def poll_results
-        ZSpec.config.queue.proccess_done(1) do |results|
-          present(::JSON.parse(results))
+        ZSpec.config.queue.proccess_done(1) do |results, stdout|
+          present(::JSON.parse(results), stdout)
         end
       end
 
-      def present(results)
+      def present(results, stdout)
         @example_count                    += results["summary"]["example_count"].to_i
         @failure_count                    += results["summary"]["failure_count"].to_i
         @pending_count                    += results["summary"]["pending_count"].to_i
         @errors_outside_of_examples_count += results["summary"]["errors_outside_of_examples_count"].to_i
+        @errors_outside_of_examples << stdout unless stdout.empty? || results["summary"]["errors_outside_of_examples_count"].to_i == 0
         @runtimes << {
           file_path: results["summary"]["file_path"],
           duration:  results["summary"]["duration"],
@@ -64,7 +66,12 @@ module ZSpec
           exit(1)
         end
 
-        if @errors_outside_of_examples_count > 0
+        if @errors_outside_of_examples.any?
+          puts "ERRORS OUTSIDE OF EXAMPLES:"
+          @errors_outside_of_examples.each do |message|
+            puts message
+          end
+          $stdout.flush
           exit(1)
         end
       end

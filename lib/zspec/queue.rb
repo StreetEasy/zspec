@@ -50,7 +50,9 @@ module ZSpec
         results = @sink.hget(@metadata_hash_name, results_key(message))
         next if results.nil? || results.empty?
 
-        yield(results)
+        stdout = @sink.hget(@metadata_hash_name, stdout_key(message))
+
+        yield(results, stdout)
 
         @sink.hset(@metadata_hash_name, dedupe_key(message), true)
         @sink.decr(@counter_name)
