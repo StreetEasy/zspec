@@ -20,16 +20,9 @@ module ZSpec
       end
 
       def present(results, stdout)
-        @example_count                    += results["summary"]["example_count"].to_i
-        @failure_count                    += results["summary"]["failure_count"].to_i
-        @pending_count                    += results["summary"]["pending_count"].to_i
-        @errors_outside_of_examples_count += results["summary"]["errors_outside_of_examples_count"].to_i
-        @errors_outside_of_examples << stdout unless stdout.nil? || stdout.empty?
-        @runtimes << {
-          file_path: results["summary"]["file_path"],
-          duration:  results["summary"]["duration"],
-          load_time: results["summary"]["load_time"],
-        }
+        track_counts(results)
+        track_errors_outside_of_examples(results, stdout)
+        track_runtimes(results)
       end
 
       def print_summary
@@ -77,6 +70,25 @@ module ZSpec
       end
 
       private
+
+      def track_counts(results)
+        @example_count                    += results["summary"]["example_count"].to_i
+        @failure_count                    += results["summary"]["failure_count"].to_i
+        @pending_count                    += results["summary"]["pending_count"].to_i
+        @errors_outside_of_examples_count += results["summary"]["errors_outside_of_examples_count"].to_i
+      end
+
+      def track_errors_outside_of_examples(results, stdout)
+        @errors_outside_of_examples << stdout unless stdout.nil? || stdout.empty? || results["summary"]["errors_outside_of_examples_count"].to_i == 0
+      end
+
+      def track_runtimes(results)
+       @runtimes << {
+          file_path: results["summary"]["file_path"],
+          duration:  results["summary"]["duration"],
+          load_time: results["summary"]["load_time"],
+        }
+      end
 
       def humanize(secs)
         [[60, :seconds], [60, :minutes], [24, :hours], [Float::INFINITY, :days]].map{ |count, name|

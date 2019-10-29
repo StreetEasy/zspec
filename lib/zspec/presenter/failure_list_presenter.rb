@@ -3,12 +3,12 @@ module ZSpec
     class FailureListPresenter < ZSpec::Presenters::BasePresenter
       def present(results, stdout)
         super
-        format_results(results)
+        track_failures(results)
       end
 
       private
 
-      def format_results(results)
+      def track_failures(results)
         results["failures"].each do |example|
           @failures << example
         end
