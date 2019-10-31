@@ -12,7 +12,7 @@ module ZSpec
       end
 
       ::RSpec::Core::Formatters.register self,
-        :close, :dump_summary, :example_failed
+        :close, :dump_summary, :stop, :example_failed
     end
   end
 end

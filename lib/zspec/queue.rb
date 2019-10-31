@@ -11,7 +11,6 @@ module ZSpec
       @done_queue_name    = options[:queue_name] + ":done"
       @metadata_hash_name = options[:queue_name] + ":metadata"
       @failure_hash_name  = "failures"
-      @runtime_hash_name  = "runtimes"
     end
 
     def cleanup
@@ -59,12 +58,12 @@ module ZSpec
       end
     end
 
-    def resolve(failed, message, runtime, results, stdout)
+    def resolve(failed, message, results, stdout)
       track_failure(message) if failed
       if failed && (count = retry_count(message)) && (count < @retries)
         retry_message(message, count)
       else
-        resolve_message(message, runtime, results, stdout)
+        resolve_message(message, results, stdout)
       end
     end
 
@@ -97,8 +96,7 @@ module ZSpec
       @sink.hset(@metadata_hash_name, retry_key(message), count+1)
     end
 
-    def resolve_message(message, runtime, results, stdout)
-      @sink.hset(@runtime_hash_name, message, runtime)
+    def resolve_message(message, results, stdout)
       @sink.hset(@metadata_hash_name, stdout_key(message), stdout)
       @sink.hset(@metadata_hash_name, results_key(message), results)
       @sink.lrem(@process_queue_name, message)

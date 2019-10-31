@@ -25,7 +25,7 @@ module ZSpec
       end
 
       ::RSpec::Core::Formatters.register self,
-        :close, :dump_summary, :example_failed, :example_group_started, :example_group_finished, :example_finished
+        :close, :dump_summary, :stop, :example_failed, :example_group_started, :example_group_finished, :example_finished
     end
   end
 end
