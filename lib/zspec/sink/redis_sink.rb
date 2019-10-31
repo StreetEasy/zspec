@@ -17,6 +17,10 @@ module ZSpec
         @redis.lpush(key, value)
       end
 
+      def rpush(key, value)
+        @redis.rpush(key, value)
+      end
+
       def brpoplpush(source, destination, timeout=0)
         @redis.brpoplpush(source, destination, {timeout: timeout})
       end

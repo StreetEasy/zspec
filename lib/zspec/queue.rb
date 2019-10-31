@@ -80,7 +80,7 @@ module ZSpec
       @sink.lrange(@process_queue_name, 0, -1).each do |message|
         if is_expired?(message)
           @sink.lrem(@process_queue_name, message)
-          @sink.lpush(@pending_queue_name, message)
+          @sink.rpush(@pending_queue_name, message)
           @sink.hdel(@metadata_hash_name, timeout_key(message))
         end
       end
