@@ -1,14 +1,18 @@
 module ZSpec
   class Presenter
-    def initialize(failure_display_max:)
+    def initialize(failure_display_max:, truncate_length:)
       ::RSpec::configuration.tty = true
       ::RSpec::configuration.color = true
+
+      @failure_display_max = failure_display_max
+      @truncate_length = truncate_length
+
       @failures = []
       @errors_outside_of_examples = []
       @runtimes = []
+
       @example_count = 0
       @failure_count = 0
-      @failure_display_max = failure_display_max
       @pending_count = 0
       @errors_outside_of_examples_count = 0
     end
@@ -116,12 +120,11 @@ module ZSpec
     end
 
     def truncated(message)
-      max_length = ZSpec.config.truncate_length
       unless message.empty?
-        if message.length < max_length
+        if message.length < @truncate_length
           message
         else
-          message.slice(0..max_length) + '... (truncated)'
+          message.slice(0..@truncate_length) + '... (truncated)'
         end
       end
     end

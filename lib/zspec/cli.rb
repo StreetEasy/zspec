@@ -18,6 +18,7 @@ module ZSpec
     def present
       presenter = ZSpec::Presenter.new(
         failure_display_max: failure_display_max,
+        truncate_length: truncate_length,
       )
       presenter.poll_results
       cleanup
@@ -38,8 +39,6 @@ module ZSpec
 
     def configure
       ZSpec.configure do |config|
-        config.failure_count = failure_count
-        config.truncate_length = truncate_length
         config.sink = sink
         config.queue = ZSpec::Queue.new(
           sink: sink,
