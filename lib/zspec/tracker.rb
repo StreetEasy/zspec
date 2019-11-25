@@ -1,7 +1,7 @@
 module ZSpec
   class Tracker
     def initialize(flaky_threshold:, sink:)
-      @failure_hash_name = "failures"
+      @failure_hash_name = "flakes"
       @flaky_threshold = flaky_threshold
       @sink = sink
     end
