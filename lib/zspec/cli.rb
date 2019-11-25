@@ -16,7 +16,7 @@ module ZSpec
 
     desc "present", ""
     def present
-      presenter = ZSpec.config.presenter.constantize.new
+      presenter = ZSpec::Presenter.new
       presenter.poll_results
       cleanup
       presenter.print_summary
@@ -36,8 +36,6 @@ module ZSpec
 
     def configure
       ZSpec.configure do |config|
-        config.presenter = presenter
-        config.formatter = formatter
         config.failure_count = failure_count
         config.truncate_length = truncate_length
         config.sink = sink
@@ -60,14 +58,6 @@ module ZSpec
 
     def build_number
       ENV['ZSPEC_BUILD_NUMBER']
-    end
-
-    def formatter
-      ENV["ZSPEC_FORMATTER"] || "ZSpec::Formatters::FailureListFormatter"
-    end
-
-    def presenter
-      ENV["ZSPEC_PRESENTER"] || "ZSpec::Presenters::FailureListPresenter"
     end
 
     def timeout
