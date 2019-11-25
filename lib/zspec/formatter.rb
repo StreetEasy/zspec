@@ -39,6 +39,12 @@ module ZSpec
         @output_hash.to_json,
         ZSpec.config.stdout.string,
       )
+
+      if @failed
+        ZSpec.config.tracker.track_failure(
+          failures: @output_hash[:failures],
+        )
+      end
     end
 
     private

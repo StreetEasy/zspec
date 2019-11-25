@@ -16,7 +16,9 @@ module ZSpec
 
     desc "present", ""
     def present
-      presenter = ZSpec::Presenter.new
+      presenter = ZSpec::Presenter.new(
+        failure_display_max: failure_display_max,
+      )
       presenter.poll_results
       cleanup
       presenter.print_summary
@@ -44,9 +46,12 @@ module ZSpec
           queue_name: "#{build_number}:queue",
           timeout: timeout,
           retries: retries,
-          flaky_threshold: flaky_threshold,
         )
         config.scheduler = ZSpec::Scheduler.new(
+          sink: sink,
+        )
+        config.tracker = ZSpec::Tracker.new(
+          flaky_threshold: flaky_threshold,
           sink: sink,
         )
       end
@@ -68,8 +73,8 @@ module ZSpec
       ENV["ZSPEC_RETRIES"] || 0
     end
 
-    def failure_count
-      ENV["ZSPEC_FAILURE_COUNT"] || 25
+    def failure_display_max
+      ENV["ZSPEC_FAILURE_DISPLAY_MAX"] || 25
     end
 
     def truncate_length

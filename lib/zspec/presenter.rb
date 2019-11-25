@@ -1,6 +1,6 @@
 module ZSpec
   class Presenter
-    def initialize
+    def initialize(failure_display_max:)
       ::RSpec::configuration.tty = true
       ::RSpec::configuration.color = true
       @failures = []
@@ -8,6 +8,7 @@ module ZSpec
       @runtimes = []
       @example_count = 0
       @failure_count = 0
+      @failure_display_max = failure_display_max
       @pending_count = 0
       @errors_outside_of_examples_count = 0
     end
@@ -35,11 +36,11 @@ module ZSpec
       puts "10 SLOWEST FILES:"
       @runtimes.sort_by{ |h| h[:duration] }.reverse.take(10).each do |h|
         puts "#{h[:file_path]} finished in #{format_duration(h[:duration])} " \
-              "(file took #{format_duration(h[:load_time])} to load)\n"
+          "(file took #{format_duration(h[:load_time])} to load)\n"
       end
 
       puts "FLAKY SPECS:"
-      ZSpec.config.queue.flaky_specs.take(ZSpec.config.failure_count).each do |failure|
+      ZSpec.config.tracker.flaky_specs.take(@failure_display_max).each do |failure|
         puts "#{failure["message"]} failed #{failure["count"]} times. " \
           "last failure was #{humanize(Time.now.to_i - failure["last_failure"])} ago.\n"
       end
@@ -47,8 +48,8 @@ module ZSpec
       $stdout.flush
 
       if @failures.any?
-        puts "FIRST #{ZSpec.config.failure_count} FAILURES:"
-        @failures.take(ZSpec.config.failure_count).each_with_index do |example, index|
+        puts "FIRST #{@failure_display_max} FAILURES:"
+        @failures.take(@failure_display_max).each_with_index do |example, index|
           puts wrap("#{example["id"]}\n" \
                     "#{example["description"]} (FAILED - #{index+1})\n" \
                     "Exception - #{truncated(message_or_default(example))}\n" \
@@ -58,8 +59,8 @@ module ZSpec
       end
 
       if @errors_outside_of_examples.any?
-        puts "FIRST #{ZSpec.config.failure_count} ERRORS OUTSIDE OF EXAMPLES:"
-        @errors_outside_of_examples.take(ZSpec.config.failure_count).each do |message|
+        puts "FIRST #{@failure_display_max} ERRORS OUTSIDE OF EXAMPLES:"
+        @errors_outside_of_examples.take(@failure_display_max).each do |message|
           puts wrap(truncated(message), :failure)
         end
       end

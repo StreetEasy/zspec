@@ -3,14 +3,12 @@ module ZSpec
     def initialize(options = {})
       @sink               = options[:sink]
       @timeout            = options[:timeout].to_i
-      @flaky_threshold    = options[:flaky_threshold].to_i
       @retries            = options[:retries].to_i
       @counter_name       = options[:queue_name] + ":count"
       @pending_queue_name = options[:queue_name] + ":pending"
       @process_queue_name = options[:queue_name] + ":processing"
       @done_queue_name    = options[:queue_name] + ":done"
       @metadata_hash_name = options[:queue_name] + ":metadata"
-      @failure_hash_name  = "failures"
       @runtime_hash_name  = "runtimes"
     end
 
@@ -60,19 +58,11 @@ module ZSpec
     end
 
     def resolve(failed, message, runtime, results, stdout)
-      track_failure(message) if failed
       if failed && (count = retry_count(message)) && (count < @retries)
         retry_message(message, count)
       else
         resolve_message(message, runtime, results, stdout)
       end
-    end
-
-    def flaky_specs
-      @sink.hgetall(@failure_hash_name).map { |failure, message| JSON.parse(message) }
-      .select { |failure| (@sink.time - failure["last_failure"].to_i) < @flaky_threshold }
-      .sort_by{ |failure| failure["count"] }
-      .reverse
     end
 
     private
@@ -107,12 +97,6 @@ module ZSpec
 
     def retry_count(message)
       @sink.hget(@metadata_hash_name, retry_key(message)).to_i
-    end
-
-    def track_failure(message)
-      failure = JSON.parse(@sink.hget(@failure_hash_name, message) || "{\"count\":0}")
-      failure.merge!({"message": message, "last_failure": @sink.time, "count": failure["count"].to_i+1 })
-      @sink.hset(@failure_hash_name, message, failure.to_json)
     end
 
     def proccessing?
