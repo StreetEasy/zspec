@@ -18,6 +18,7 @@ module ZSpec
   require 'zspec/sink'
   require 'zspec/presenter'
   require 'zspec/formatter'
+  require 'zspec/tracker'
   require 'zspec/queue'
   require 'zspec/scheduler'
   require 'zspec/worker'
