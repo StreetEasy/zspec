@@ -14,7 +14,7 @@ module ZSpec
     end
 
     def track_failure(failures:)
-      failures.map(&:id).each do |message|
+      failures.map{|h| h[:id]}.each do |message|
         failure = JSON.parse(@sink.hget(@failure_hash_name, message) || "{\"count\":0}")
         failure.merge!({"message": message, "last_failure": @sink.time, "count": failure["count"].to_i+1 })
         @sink.hset(@failure_hash_name, message, failure.to_json)
