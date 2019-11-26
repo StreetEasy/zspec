@@ -1,14 +1,14 @@
 module ZSpec
   class Queue
-    def initialize(options = {})
-      @sink               = options[:sink]
-      @timeout            = options[:timeout].to_i
-      @retries            = options[:retries].to_i
-      @counter_name       = options[:queue_name] + ":count"
-      @pending_queue_name = options[:queue_name] + ":pending"
-      @process_queue_name = options[:queue_name] + ":processing"
-      @done_queue_name    = options[:queue_name] + ":done"
-      @metadata_hash_name = options[:queue_name] + ":metadata"
+    def initialize(prefix:, sink:, timeout: 0, retries: 0)
+      @sink               = sink
+      @timeout            = timeout.to_i
+      @retries            = retries.to_i
+      @counter_name       = prefix + ":count"
+      @pending_queue_name = prefix + ":pending"
+      @process_queue_name = prefix + ":processing"
+      @done_queue_name    = prefix + ":done"
+      @metadata_hash_name = prefix + ":metadata"
       @runtime_hash_name  = "runtimes"
     end
 

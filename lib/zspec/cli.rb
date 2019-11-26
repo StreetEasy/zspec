@@ -42,7 +42,7 @@ module ZSpec
         config.sink = sink
         config.queue = ZSpec::Queue.new(
           sink: sink,
-          queue_name: "#{build_number}:queue",
+          prefix: "#{build_number}:queue",
           timeout: timeout,
           retries: retries,
         )
