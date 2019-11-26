@@ -37,13 +37,13 @@ module ZSpec
       puts "pending_count: #{@pending_count}"
       puts "errors_outside_of_examples_count: #{@errors_outside_of_examples_count}"
 
-      puts "10 SLOWEST FILES:"
+      puts wrap("\n10 SLOWEST FILES:", :bold)
       @runtimes.sort_by{ |h| h[:duration] }.reverse.take(10).each do |h|
         puts "#{h[:file_path]} finished in #{format_duration(h[:duration])} " \
           "(file took #{format_duration(h[:load_time])} to load)\n"
       end
 
-      puts "FLAKY SPECS:"
+      puts wrap("\nFIRST #{@failure_display_max} FLAKY SPECS:", :bold)
       ZSpec.config.tracker.flaky_specs.take(@failure_display_max).each do |failure|
         puts "#{failure["message"]} failed #{failure["count"]} times. " \
           "last failure was #{humanize(Time.now.to_i - failure["last_failure"])} ago.\n"
@@ -52,7 +52,7 @@ module ZSpec
       $stdout.flush
 
       if @failures.any?
-        puts "FIRST #{@failure_display_max} FAILURES:"
+        puts wrap("\nFIRST #{@failure_display_max} FAILURES:", :bold)
         @failures.take(@failure_display_max).each_with_index do |example, index|
           puts wrap("#{example["id"]}\n" \
                     "#{example["description"]} (FAILED - #{index+1})\n" \
@@ -63,7 +63,7 @@ module ZSpec
       end
 
       if @errors_outside_of_examples.any?
-        puts "FIRST #{@failure_display_max} ERRORS OUTSIDE OF EXAMPLES:"
+        puts wrap("\nFIRST #{@failure_display_max} ERRORS OUTSIDE OF EXAMPLES:", :bold)
         @errors_outside_of_examples.take(@failure_display_max).each do |message|
           puts wrap(truncated(message), :failure)
         end
