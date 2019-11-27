@@ -18,7 +18,7 @@ module ZSpec
     end
 
     def poll_results
-      ZSpec.config.queue.proccess_done(1) do |results, stdout|
+      ZSpec.config.queue.process_done(1) do |results, stdout|
         present(::JSON.parse(results), stdout)
       end
     end

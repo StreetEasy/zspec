@@ -40,7 +40,7 @@ describe ZSpec::Queue do
   end
 
   describe "#process_done" do
-    context "when the counter is greater than 0" do       
+    context "when the counter is greater than 0" do
       context "if a message is expired" do
         it "moves the message back to pending" do
           sink = instance_spy(ZSpec::Sink::RedisSink, time: 250)
@@ -49,10 +49,10 @@ describe ZSpec::Queue do
           allow(sink).to receive(:get).with("foo:count").and_return(1, 0)
           allow(sink).to receive(:lrange).with("foo:processing", 0, -1).and_return([message])
           allow(sink).to receive(:hget).with("foo:metadata", "bar:timeout").and_return(200)
-  
+
           queue = ZSpec::Queue.new(sink: sink, prefix: "foo", timeout: 10)
-          queue.proccess_done
-  
+          queue.process_done
+
           expect(sink).to have_received(:lrem).with("foo:processing", message)
           expect(sink).to have_received(:rpush).with("foo:pending", message)
           expect(sink).to have_received(:hdel).with("foo:metadata", "#{message}:timeout")
@@ -92,7 +92,7 @@ describe ZSpec::Queue do
         queue = ZSpec::Queue.new(sink: sink, prefix: "foo")
 
         expect do |block|
-          queue.proccess_done(&block)
+          queue.process_done(&block)
         end.not_to yield_control
       end
     end

@@ -25,8 +25,8 @@ module ZSpec
       @sink.incr(@counter_name)
     end
 
-    def proccess_pending(timeout = 0)
-      while proccessing? do
+    def process_pending(timeout = 0)
+      while processing? do
         message = @sink.brpoplpush(@pending_queue_name, @process_queue_name, timeout)
         next if message.nil? || message.empty?
 
@@ -36,9 +36,9 @@ module ZSpec
       end
     end
 
-    def proccess_done(timeout = 0)
-      while proccessing? do
-        expire_proccessing
+    def process_done(timeout = 0)
+      while processing? do
+        expire_processing
 
         _list, message = @sink.brpop(@done_queue_name, timeout)
         next if message.nil? || message.empty?
@@ -67,7 +67,7 @@ module ZSpec
 
     private
 
-    def expire_proccessing
+    def expire_processing
       @sink.lrange(@process_queue_name, 0, -1).each do |message|
         if is_expired?(message)
           @sink.lrem(@process_queue_name, message)
@@ -78,8 +78,8 @@ module ZSpec
     end
 
     def is_expired?(message)
-      proccess_time = @sink.hget(@metadata_hash_name, timeout_key(message)).to_i
-      (@sink.time - proccess_time) > @timeout
+      process_time = @sink.hget(@metadata_hash_name, timeout_key(message)).to_i
+      (@sink.time - process_time) > @timeout
     end
 
     def retry_message(message, count)
@@ -99,7 +99,7 @@ module ZSpec
       @sink.hget(@metadata_hash_name, retry_key(message)).to_i
     end
 
-    def proccessing?
+    def processing?
       @sink.get(@counter_name).to_i > 0
     end
 

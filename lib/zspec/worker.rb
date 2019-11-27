@@ -2,7 +2,7 @@ module ZSpec
   class Worker
     def work
       require '/app/config/application'
-      ZSpec.config.queue.proccess_pending(1) do |spec|
+      ZSpec.config.queue.process_pending(1) do |spec|
         puts "running: #{spec}"
         ZSpec.config.spec_id = spec
         ZSpec.config.stdout = stdout = StringIO.new
