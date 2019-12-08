@@ -1,8 +1,8 @@
 module ZSpec
   module Sink
     class RedisSink
-      def initialize(options = {})
-        @redis = options[:redis]
+      def initialize(redis:)
+        @redis = redis
       end
 
       def time
@@ -17,24 +17,25 @@ module ZSpec
         @redis.lpush(key, value)
       end
 
-      def rpush(key, value)
-        @redis.rpush(key, value)
-      end
-
-      def brpoplpush(source, destination, timeout=0)
-        @redis.brpoplpush(source, destination, {timeout: timeout})
-      end
-
-      def brpop(key, timeout=0)
-        @redis.brpop(key, {timeout: timeout})
-      end
-
       def lrem(key, value)
         @redis.lrem(key, 0, value)
       end
 
       def lrange(key, start, stop)
         @redis.lrange(key, start, stop)
+      end
+
+      def rpush(key, value)
+        @redis.rpush(key, value)
+      end
+
+      def brpop(key, timeout = 0)
+        _list, message = @redis.brpop(key, timeout: timeout)
+        message
+      end
+
+      def brpoplpush(source, destination, timeout = 0)
+        @redis.brpoplpush(source, destination, timeout: timeout)
       end
 
       def hget(key, field)
@@ -65,8 +66,8 @@ module ZSpec
         @redis.get(key)
       end
 
-      def del(key)
-        @redis.del(key)
+      def set(key, value)
+        @redis.set(key, value)
       end
     end
   end

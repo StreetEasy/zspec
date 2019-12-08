@@ -4,15 +4,38 @@ services:
     image: redis
     expose:
     - 6379
+    volumes:
+    - redis:/data
 
-  ruby:
+  client:
     image: ruby
+    command: ./hack/client/entrypoint.sh
     volumes:
     - ./:/app
+    - bundle:/usr/local/bundle
     depends_on:
     - redis
     working_dir: /app
     environment:
       ZSPEC_REDIS_HOST: redis
-      ZSPEC_REDIS_PORT: '6379'
+      ZSPEC_REDIS_PORT: 6379
       ZSPEC_BUILD_NUMBER: '1'
+
+  worker:
+    image: ruby
+    command: ./hack/worker/entrypoint.sh
+    volumes:
+    - ./:/app
+    - bundle:/usr/local/bundle
+    depends_on:
+    - redis
+    - client
+    working_dir: /app
+    environment:
+      ZSPEC_REDIS_HOST: redis
+      ZSPEC_REDIS_PORT: 6379
+      ZSPEC_BUILD_NUMBER: '1'
+
+volumes:
+  bundle:
+  redis:

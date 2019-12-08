@@ -1,0 +1,119 @@
+AllCops:
+  ExtraDetails: true
+  TargetRubyVersion: 2.6
+
+Style/BlockDelimiters:
+  EnforcedStyle: braces_for_chaining
+
+Layout/FirstHashElementIndentation:
+  EnforcedStyle: consistent
+
+Layout/ArgumentAlignment:
+  EnforcedStyle: with_fixed_indentation
+
+Metrics/AbcSize:
+  Max: 25
+
+Metrics/LineLength:
+  Max: 120
+
+Metrics/ModuleLength:
+  Max: 250
+
+Metrics/ClassLength:
+  Max: 250
+
+Metrics/MethodLength:
+  Max: 30
+
+Metrics/BlockLength:
+  Exclude:
+    - "spec/**/*"
+
+Metrics/CyclomaticComplexity:
+    Max: 7
+
+Style/AsciiComments:
+  Enabled: false
+
+Style/ClassAndModuleChildren:
+  Enabled: false
+
+Style/Documentation:
+  Enabled: false
+
+Style/FormatString:
+  EnforcedStyle: sprintf
+
+Style/MethodDefParentheses:
+  EnforcedStyle: require_parentheses
+
+Style/NumericPredicate:
+  Enabled: false
+
+# printf style format strings are OK
+Style/FormatStringToken:
+  Enabled: false
+
+# Don't complain about using statement modifier if if blocks is 1 line long
+Style/GuardClause:
+  Enabled: false
+
+Layout/MultilineMethodCallIndentation:
+  EnforcedStyle: indented
+
+Layout/LeadingCommentSpace:
+  Enabled: false
+
+Style/MultilineTernaryOperator:
+  Enabled: false
+
+Layout/SpaceBeforeComment:
+  Enabled: false
+
+# Don't warn about the use of global regex variables $1, $2, etc...
+Style/PerlBackrefs:
+  Enabled: false
+
+# Don't warn about the use of global variables $:, $/, etc...
+Style/SpecialGlobalVars:
+  Enabled: false
+
+Style/StringLiterals:
+  EnforcedStyle: double_quotes
+
+Style/FrozenStringLiteralComment:
+  Enabled: false
+
+Style/PercentLiteralDelimiters:
+  PreferredDelimiters:
+    "%w": "()"
+    "%i": "()"
+
+Lint/AmbiguousBlockAssociation:
+  Exclude:
+    - "spec/**/*"
+
+Style/DateTime:
+  Enabled: true
+
+Layout/ClassStructure:
+  Enabled: true
+  Categories:
+    module_inclusion:
+  ExpectedOrder:
+    - include
+    - prepend
+    - extend
+
+    - constants
+
+    - attribute
+    - attr_reader
+    - attr_writer
+    - attr_accessor
+
+    - class_methods
+    - public_methods
+    - protected_methods
+    - private_methods

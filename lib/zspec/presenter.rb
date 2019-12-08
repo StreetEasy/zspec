@@ -1,27 +1,33 @@
 module ZSpec
   class Presenter
-    def initialize(failure_display_max:, truncate_length:)
-      ::RSpec::configuration.tty = true
-      ::RSpec::configuration.color = true
+    def initialize(queue:, tracker:, display_count:, truncate_length:, out: $stdout)
+      ::RSpec.configuration.tty = true
+      ::RSpec.configuration.color = true
 
-      @failure_display_max = failure_display_max
+      @queue           = queue
+      @tracker         = tracker
+      @display_count   = display_count
       @truncate_length = truncate_length
+      @out             = out
 
-      @failures = []
+      @failures                   = []
       @errors_outside_of_examples = []
-      @runtimes = []
+      @runtimes                   = []
 
-      @example_count = 0
-      @failure_count = 0
-      @pending_count = 0
+      @example_count                    = 0
+      @failure_count                    = 0
+      @pending_count                    = 0
       @errors_outside_of_examples_count = 0
     end
 
     def poll_results
-      ZSpec.config.queue.proccess_done(1) do |results, stdout|
+      @queue.proccess_done(1) do |results, stdout|
         present(::JSON.parse(results), stdout)
       end
+      print_summary
     end
+
+    private
 
     def present(results, stdout)
       track_counts(results)
@@ -31,51 +37,60 @@ module ZSpec
     end
 
     def print_summary
-      puts ""
-      puts "example_count: #{@example_count}"
-      puts "failure_count: #{@failure_count}"
-      puts "pending_count: #{@pending_count}"
-      puts "errors_outside_of_examples_count: #{@errors_outside_of_examples_count}"
+      @out.puts ""
+      @out.puts "example_count: #{@example_count}"
+      @out.puts "failure_count: #{@failure_count}"
+      @out.puts "pending_count: #{@pending_count}"
+      @out.puts "errors_outside_of_examples_count: #{@errors_outside_of_examples_count}"
 
-      puts wrap("\n10 SLOWEST FILES:", :bold)
-      @runtimes.sort_by{ |h| h[:duration] }.reverse.take(10).each do |h|
-        puts "#{h[:file_path]} finished in #{format_duration(h[:duration])} " \
-          "(file took #{format_duration(h[:load_time])} to load)\n"
-      end
+      print_slow_specs
+      print_flaky_specs
+      print_failed_specs
+      print_outside_of_examples
 
-      puts wrap("\nFIRST #{@failure_display_max} FLAKY SPECS:", :bold)
-      ZSpec.config.tracker.flaky_specs.take(@failure_display_max).each do |failure|
-        puts "#{failure["message"]} failed #{failure["count"]} times. " \
-          "last failure was #{humanize(Time.now.to_i - failure["last_failure"])} ago.\n"
-      end
+      @out.flush
+      @failures.any? || @errors_outside_of_examples.any?
+    end
 
-      $stdout.flush
-
-      if @failures.any?
-        puts wrap("\nFIRST #{@failure_display_max} FAILURES:", :bold)
-        @failures.take(@failure_display_max).each_with_index do |example, index|
-          puts wrap("#{example["id"]}\n" \
-                    "#{example["description"]} (FAILED - #{index+1})\n" \
-                    "Exception - #{truncated(message_or_default(example))}\n" \
-                    "Backtrace - #{truncated(backtrace_or_default(example).join("\n"))}\n",
-                    :failure)
-        end
-      end
-
+    def print_outside_of_examples
       if @errors_outside_of_examples.any?
-        puts wrap("\nFIRST #{@failure_display_max} ERRORS OUTSIDE OF EXAMPLES:", :bold)
-        @errors_outside_of_examples.take(@failure_display_max).each do |message|
-          puts wrap(truncated(message), :failure)
+        @out.puts wrap("\nFIRST #{@display_count} ERRORS OUTSIDE OF EXAMPLES:", :bold)
+        @errors_outside_of_examples.take(@display_count).each do |message|
+          @out.puts wrap(truncated(message), :failure)
         end
-      end
-
-      if @failures.any? || @errors_outside_of_examples.any?
-        $stdout.flush
-        exit(1)
       end
     end
 
-    private
+    def print_failed_specs
+      if @failures.any?
+        @out.puts wrap("\nFIRST #{@display_count} FAILURES:", :bold)
+        @failures.take(@display_count).each_with_index do |example, index|
+          @out.puts wrap("#{example['id']}\n" \
+                    "#{example['description']} (FAILED - #{index + 1})\n" \
+                    "Exception - #{truncated(message_or_default(example))}\n" \
+                    "Backtrace - #{truncated(backtrace_or_default(example).join("\n"))}\n",
+            :failure)
+        end
+      end
+    end
+
+    def print_flaky_specs
+      if @tracker.recent_failures.any?
+        @out.puts wrap("\nFIRST #{@display_count} FLAKY SPECS:", :bold)
+        @tracker.recent_failures.take(@display_count).each do |failure|
+          @out.puts "#{failure['message']} failed #{failure['count']} times. " \
+            "last failure was #{humanize(Time.now.to_i - failure['last_failure'])} ago.\n"
+        end
+      end
+    end
+
+    def print_slow_specs
+      @out.puts wrap("\n#{@display_count} SLOWEST FILES:", :bold)
+      @runtimes.sort_by { |h| h[:duration] }.reverse.take(@display_count).each do |h|
+        @out.puts "#{h[:file_path]} finished in #{format_duration(h[:duration])} " \
+          "(file took #{format_duration(h[:load_time])} to load)\n"
+      end
+    end
 
     def track_failures(results)
       results["failures"].each do |example|
@@ -91,24 +106,26 @@ module ZSpec
     end
 
     def track_errors_outside_of_examples(results, stdout)
-      @errors_outside_of_examples << stdout unless stdout.nil? || stdout.empty? || results["summary"]["errors_outside_of_examples_count"].to_i == 0
+      unless stdout.nil? || stdout.empty? || results["summary"]["errors_outside_of_examples_count"].to_i == 0
+        @errors_outside_of_examples << stdout
+      end
     end
 
     def track_runtimes(results)
       @runtimes << {
         file_path: results["summary"]["file_path"],
-        duration:  results["summary"]["duration"],
-        load_time: results["summary"]["load_time"],
+        duration: results["summary"]["duration"],
+        load_time: results["summary"]["load_time"]
       }
     end
 
     def humanize(secs)
-      [[60, :seconds], [60, :minutes], [24, :hours], [Float::INFINITY, :days]].map{ |count, name|
+      [[60, :seconds], [60, :minutes], [24, :hours], [Float::INFINITY, :days]].map { |count, name|
         if secs > 0
           secs, n = secs.divmod(count)
-          "#{n.to_i} #{name}" unless n.to_i==0
+          "#{n.to_i} #{name}" unless n.to_i == 0
         end
-      }.compact.reverse.join(' ')
+      }.compact.reverse.join(" ")
     end
 
     def message_or_default(example)
@@ -124,7 +141,7 @@ module ZSpec
         if message.length < @truncate_length
           message
         else
-          message.slice(0..@truncate_length) + '... (truncated)'
+          message.slice(0..@truncate_length) + "... (truncated)"
         end
       end
     end
