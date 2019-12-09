@@ -3,11 +3,11 @@ require "spec_helper"
 describe ZSpec::Formatter do
   before :each do
     @message = "./spec/zspec/formatter_spec.rb"
-    @queue.enqueue([@message])
-    @queue.next_pending
+    @queue.enqueue([@message1])
+    @queue.proccess_pending(loop: false)
 
     @formatter = ZSpec::Formatter.new(
-      queue: @queue, tracker: @tracker, stdout: StringIO.new, message: @message
+      queue: @queue, tracker: @tracker, stdout: StringIO.new, message: @message1
     )
 
     @exception = RuntimeError.new("ZSpec exception")
@@ -37,11 +37,11 @@ describe ZSpec::Formatter do
     end
 
     it "tracks the runtime" do
-      expect(@state).to include(@tracker.runtimes_hash_name => { @message => @duration })
+      expect(@state).to include(@tracker.runtimes_hash_name => { @message1 => @duration })
     end
 
     it "moves the message to the done queue" do
-      expect(@state).to include(@queue.done_queue_name => [@message])
+      expect(@state).to include(@queue.done_queue_name => [@message1])
     end
   end
 
@@ -54,16 +54,16 @@ describe ZSpec::Formatter do
     end
 
     it "tracks the runtime" do
-      expect(@state).to include(@tracker.runtimes_hash_name => { @message => @duration })
+      expect(@state).to include(@tracker.runtimes_hash_name => { @message1 => @duration })
     end
 
     it "removes timeout from metadata" do
-      expect(@state[@queue.metadata_hash_name][@queue.timeout_key(@message)]).to eq(nil)
+      expect(@state[@queue.metadata_hash_name][@queue.timeout_key(@message1)]).to eq(nil)
     end
 
     it "adds retry to metadata" do
       expect(@state).to include(@queue.metadata_hash_name => {
-        @queue.retry_key(@message) => 1
+        @queue.retry_key(@message1) => 1
       })
     end
 
@@ -71,20 +71,6 @@ describe ZSpec::Formatter do
       expect(@state).to include(@tracker.failures_hash_name => {
         @failed_example.id.to_s => "{\"count\":1,\"message\":\"#{@failed_example.id}\",\"last_failure\":#{@time}}"
       })
-    end
-  end
-
-  context "when it exceeds the failure limit" do
-    before :each do
-      @queue.retry_message(@message, 2)
-      @formatter.start(@start_notification)
-      @formatter.example_failed(@failed_notification)
-      @formatter.dump_summary(@summary_notification)
-      @formatter.close(@close_notification)
-    end
-
-    it "moves the message to the done queue" do
-      expect(@state).to include(@queue.done_queue_name => [@message])
     end
   end
 end

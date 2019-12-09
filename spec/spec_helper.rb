@@ -18,7 +18,8 @@ RSpec.configure do |c|
 
     @scheduler = ZSpec::Scheduler.new(queue: @queue, tracker: @tracker)
 
-    @message = "message"
+    @message1 = "message1"
+    @message2 = "message2"
     @result = "{}"
     @stdout = "..."
     @test_path = "spec/resources/spec"
