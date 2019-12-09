@@ -34,9 +34,7 @@ module ZSpec
       @sink.set(@workers_ready, true)
     end
 
-    def proccess_done(timeout = 0, &block)
-      return unless block_given?
-
+    def process_done(timeout = 0, &block)
       next_done(timeout, &block) while processing?
     end
 
@@ -56,7 +54,35 @@ module ZSpec
       end
     end
     
-    # private
+    def timeout_key(message)
+      "#{message}:timeout"
+    end
+
+    def stdout_key(message)
+      "#{message}:stdout"
+    end
+
+    def results_key(message)
+      "#{message}:results"
+    end
+
+    def retry_key(message)
+      "#{message}:retries"
+    end
+
+    def dedupe_key(message)
+      "#{message}:dedupe"
+    end
+
+    def next_pending(timeout = 0)
+      message = @sink.brpoplpush(@pending_queue_name, @process_queue_name, timeout)
+      return if message.nil? || message.empty?
+
+      @sink.hset(@metadata_hash_name, timeout_key(message), @sink.time)
+      yield(message) if block_given?
+    end    
+
+    private
 
     def next_done(timeout = 0)
       expire_processing
@@ -77,13 +103,7 @@ module ZSpec
       @sink.decr(@counter_name)
     end
 
-    def next_pending(timeout = 0)
-      message = @sink.brpoplpush(@pending_queue_name, @process_queue_name, timeout)
-      return if message.nil? || message.empty?
 
-      @sink.hset(@metadata_hash_name, timeout_key(message), @sink.time)
-      yield(message) if block_given?
-    end
 
     def expire_processing
       processing.each do |message|
@@ -126,26 +146,6 @@ module ZSpec
     def retry_message(message, count)
       @sink.hdel(@metadata_hash_name, timeout_key(message))
       @sink.hset(@metadata_hash_name, retry_key(message), count + 1)
-    end
-
-    def timeout_key(message)
-      "#{message}:timeout"
-    end
-
-    def stdout_key(message)
-      "#{message}:stdout"
-    end
-
-    def results_key(message)
-      "#{message}:results"
-    end
-
-    def retry_key(message)
-      "#{message}:retries"
-    end
-
-    def dedupe_key(message)
-      "#{message}:dedupe"
     end
   end
 end

@@ -129,65 +129,66 @@ describe ZSpec::Queue do
     end
   end
 
-  describe "#expire_processing" do
-    before :each do
-      @queue.enqueue([@message])
-      @queue.next_pending
-      @state[:time] = @time + 200
-      @queue.expire_processing
+  describe "#process_done" do
+    context "when there is an expired message in the queue" do
+      before :each do
+        @queue.enqueue([@message])  
+        @queue.next_pending
+        @state[:time] = @time + 200
+        @queue.process_done
+      end
+
+      it "removes message from process queue" do
+        expect(@state).to include(@queue.process_queue_name => [])
+      end
+  
+      it "moves message back to pending" do
+        expect(@state).to include(@queue.pending_queue_name => [@message])
+      end
+  
+      it "removes timeout from metadata" do
+        expect(@state[@queue.metadata_hash_name][@queue.timeout_key(@message)]).to eq(nil)
+      end
     end
 
-    it "removes message from process queue" do
-      expect(@state).to include(@queue.process_queue_name => [])
-    end
-    it "moves message back to pending" do
-      expect(@state).to include(@queue.pending_queue_name => [@message])
-    end
-    it "removes timeout from metadata" do
-      expect(@state[@queue.metadata_hash_name][@queue.timeout_key(@message)]).to eq(nil)
-    end
-  end
-
-  describe "#next_done" do
-    before :each do
-      @queue.enqueue([@message])
-      @queue.next_pending
-      @queue.resolve_message(@message, @result, @stdout)
-    end
+    # before :each do
+    #   @queue.enqueue([@message])
+    #   @queue.resolve(false, @message, @result, @stdout)
+    # end
 
     it "removes the first message from done" do
-      @queue.next_done
+      @queue.process_done
       expect(@state).to include(@queue.done_queue_name => [])
     end
 
     context "is a dupe result" do
       it "does nothing" do
-        @queue.next_done
-        @queue.resolve_message(@message, @result, @stdout)
-        expect { |block| @queue.next_done(&block) }.not_to yield_control
+        @queue.process_done
+        @queue.resolve(false, @message, @result, @stdout)
+        expect { |block| @queue.process_done(&block) }.not_to yield_control
       end
     end
 
     context "is a new result" do
       it "yields results and stdout" do
-        expect { |block| @queue.next_done(&block) }.to yield_with_args(@result, @stdout)
+        expect { |block| @queue.process_done(&block) }.to yield_with_args(@result, @stdout)
       end
 
       it "sets the dedupe key in metadata" do
-        @queue.next_done
+        @queue.process_done
         expect(@state[@queue.metadata_hash_name][@queue.dedupe_key(@message)]).to eq(true)
       end
 
       it "decrements the counter" do
-        @queue.next_done
+        @queue.process_done
         expect(@state).to include(@queue.counter_name => 0)
       end
     end
   end
-  describe "#proccess_done" do
+  describe "#process_done" do
     it "skips if no block given"
     context "when processing" do
-      it "calls #next_done"
+      it ""
     end
     context "when not processing" do
       it "does not call #next_done"
