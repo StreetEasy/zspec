@@ -1,6 +1,20 @@
 require "spec_helper"
 
 describe ZSpec::Queue do
+  describe "#cleanup" do
+    it "sets exiprations on the queues" do
+      @queue.cleanup
+      expect(@expirations).to include(
+        @queue.counter_name => 1800,
+        @queue.pending_queue_name => 1800,
+        @queue.process_queue_name => 1800,
+        @queue.done_queue_name => 1800,
+        @queue.metadata_hash_name => 1800,
+        @queue.workers_ready => 1800
+      )
+    end
+  end
+
   describe "#enqueue" do
     it "adds an item to the pending queue" do
       @queue.enqueue([@message])
@@ -11,9 +25,25 @@ describe ZSpec::Queue do
       @queue.enqueue([@message])
       expect(@state).to include(@queue.counter_name => 1)
     end
+
+    it "sets workers ready key as true" do
+      @queue.enqueue([@message])
+      expect(@state).to include(@queue.workers_ready => true)
+    end
   end
 
   describe "#next_pending" do
+    context "when there is nothing the queue" do
+      it "does not yield" do
+        expect { |block| @queue.next_pending(&block) }.to_not yield_control
+      end
+
+      it "does not set any metadata" do
+        @queue.next_pending
+        expect(@state).to_not include(@queue.metadata_hash_name => {})
+      end
+    end
+
     it "yields next item from the pending queue" do
       @queue.enqueue([@message])
       expect { |block| @queue.next_pending(&block) }.to yield_with_args(@message)
@@ -80,7 +110,7 @@ describe ZSpec::Queue do
       @queue.next_pending
     end
 
-    it "resolves the message if it passed" do
+    it "resolves the message if spec passed" do
       @queue.resolve(false, @message, @result, @stdout)
       expect(@state[@queue.done_queue_name]).to eq([@message])
     end
@@ -152,6 +182,25 @@ describe ZSpec::Queue do
         @queue.next_done
         expect(@state).to include(@queue.counter_name => 0)
       end
+    end
+  end
+  describe "#proccess_done" do
+    it "skips if no block given"
+    context "when processing" do
+      it "calls #next_done"
+    end
+    context "when not processing" do
+      it "does not call #next_done"
+    end
+  end
+  describe "#proccess_pending" do
+    it "skips if no block given"
+    it "blocks until workers are ready"
+    context "when processing" do
+      it "calls next pending"
+    end
+    context "when not processing" do
+      it "does not call #next_pending"
     end
   end
 end

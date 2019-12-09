@@ -4,6 +4,7 @@ module ZSpec
   class Queue
     attr_reader :counter_name, :pending_queue_name, :process_queue_name,
       :done_queue_name, :metadata_hash_name, :workers_ready
+
     def initialize(sink:, queue_name:, retries:, timeout:)
       @sink               = sink
       @retries            = retries.to_i
@@ -47,6 +48,16 @@ module ZSpec
       next_pending(timeout, &block) while processing?
     end
 
+    def resolve(failed, message, results, stdout)
+      if failed && (count = retry_count(message)) && (count < @retries)
+        retry_message(message, count)
+      else
+        resolve_message(message, results, stdout)
+      end
+    end
+    
+    # private
+
     def next_done(timeout = 0)
       expire_processing
 
@@ -72,14 +83,6 @@ module ZSpec
 
       @sink.hset(@metadata_hash_name, timeout_key(message), @sink.time)
       yield(message) if block_given?
-    end
-
-    def resolve(failed, message, results, stdout)
-      if failed && (count = retry_count(message)) && (count < @retries)
-        retry_message(message, count)
-      else
-        resolve_message(message, results, stdout)
-      end
     end
 
     def expire_processing
