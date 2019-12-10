@@ -4,7 +4,7 @@ describe ZSpec::Formatter do
   before :each do
     @message = "./spec/zspec/formatter_spec.rb"
     @queue.enqueue([@message1])
-    @queue.proccess_pending(loop: false)
+    @queue.next_pending
 
     @formatter = ZSpec::Formatter.new(
       queue: @queue, tracker: @tracker, stdout: StringIO.new, message: @message1
@@ -29,7 +29,7 @@ describe ZSpec::Formatter do
     )
   end
 
-  context "when no failures" do
+  context "when there are no failures" do
     before :each do
       @formatter.start(@start_notification)
       @formatter.dump_summary(@summary_notification)
@@ -40,7 +40,7 @@ describe ZSpec::Formatter do
       expect(@state).to include(@tracker.runtimes_hash_name => { @message1 => @duration })
     end
 
-    it "moves the message to the done queue" do
+    it "resolves the message" do
       expect(@state).to include(@queue.done_queue_name => [@message1])
     end
   end
@@ -57,19 +57,16 @@ describe ZSpec::Formatter do
       expect(@state).to include(@tracker.runtimes_hash_name => { @message1 => @duration })
     end
 
-    it "removes timeout from metadata" do
-      expect(@state[@queue.metadata_hash_name][@queue.timeout_key(@message1)]).to eq(nil)
-    end
-
-    it "adds retry to metadata" do
-      expect(@state).to include(@queue.metadata_hash_name => {
-        @queue.retry_key(@message1) => 1
-      })
-    end
-
     it "tracks the failure" do
       expect(@state).to include(@tracker.failures_hash_name => {
         @failed_example.id.to_s => "{\"count\":1,\"message\":\"#{@failed_example.id}\",\"last_failure\":#{@time}}"
+      })
+    end
+
+    it "resolves the massage" do
+      expect(@state[@queue.metadata_hash_name][@queue.timeout_key(@message1)]).to eq(nil)
+      expect(@state).to include(@queue.metadata_hash_name => {
+        @queue.retry_key(@message1) => 1
       })
     end
   end
