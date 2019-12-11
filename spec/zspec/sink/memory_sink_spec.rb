@@ -1,6 +1,15 @@
 require "spec_helper"
 
 describe ZSpec::Sink::MemorySink do
+  before :each do
+    @key1 = "key1"
+    @key2 = "key2"
+    @key3 = "key3"
+    @val1 = "val1"
+    @val2 = "val2"
+    @val3 = "val3"
+  end
+
   describe "#rpush" do
     it "adds item to the end of the queue" do
       @sink.rpush(@key1, @val1)

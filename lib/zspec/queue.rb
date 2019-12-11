@@ -1,9 +1,9 @@
-require "pry"
-
 module ZSpec
   class Queue
     attr_reader :counter_name, :pending_queue_name, :processing_queue_name,
       :done_queue_name, :metadata_hash_name, :workers_ready_key_name
+
+    EXPIRE_SECONDS = 1800
 
     def initialize(sink:, queue_name:, retries:, timeout:)
       @sink                   = sink
@@ -18,12 +18,12 @@ module ZSpec
     end
 
     def cleanup
-      @sink.expire(@counter_name, 1800)
-      @sink.expire(@pending_queue_name, 1800)
-      @sink.expire(@processing_queue_name, 1800)
-      @sink.expire(@done_queue_name, 1800)
-      @sink.expire(@metadata_hash_name, 1800)
-      @sink.expire(@workers_ready_key_name, 1800)
+      @sink.expire(@counter_name, EXPIRE_SECONDS)
+      @sink.expire(@pending_queue_name, EXPIRE_SECONDS)
+      @sink.expire(@processing_queue_name, EXPIRE_SECONDS)
+      @sink.expire(@done_queue_name, EXPIRE_SECONDS)
+      @sink.expire(@metadata_hash_name, EXPIRE_SECONDS)
+      @sink.expire(@workers_ready_key_name, EXPIRE_SECONDS)
     end
 
     def enqueue(messages)
@@ -37,6 +37,15 @@ module ZSpec
     def process_done(timeout = 1, &block)
       next_done(timeout, &block) while processing?
     end
+
+    def proccess_pending(timeout = 1, &block)
+      sleep 1 until workers_ready?
+
+      next_pending(timeout, &block) while processing?
+    end
+
+    # private
+    # these functions are exported for testing only
 
     def next_done(timeout = 0)
       expire_processing
@@ -56,15 +65,6 @@ module ZSpec
       @sink.hset(@metadata_hash_name, dedupe_key(message), true)
       @sink.decr(@counter_name)
     end
-
-    def proccess_pending(timeout = 1, &block)
-      sleep 1 until workers_ready?
-
-      next_pending(timeout, &block) while processing?
-    end
-
-    # private
-    # these functions are exported for testing only
 
     def next_pending(timeout = 0)
       message = @sink.brpoplpush(@pending_queue_name, @processing_queue_name, timeout)

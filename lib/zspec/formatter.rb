@@ -19,7 +19,8 @@ module ZSpec
 
     def dump_summary(summary)
       @duration = summary.duration
-      @failed = true if summary.errors_outside_of_examples_count.to_i > 0
+      # only set to true if there is a failure, otherwise it will override the failures from example_failed
+      @failed   = true if summary.errors_outside_of_examples_count.to_i > 0
       @output_hash[:summary] = format_summary(summary)
     end
 

@@ -9,7 +9,7 @@ module ZSpec
 
     def work
       require APPLICATION_FILE if File.exist? APPLICATION_FILE
-      @queue.proccess_pending(1) do |spec|
+      @queue.proccess_pending do |spec|
         puts "running: #{spec}"
         fork do
           run_specs(spec, StringIO.new)

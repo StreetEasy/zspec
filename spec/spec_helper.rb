@@ -32,11 +32,6 @@ RSpec.configure do |c|
     @failure1 = { "count" => 1, "message" => @relative_file1, "last_failure" => @time }
     @failure2 = { "count" => 1, "message" => @relative_file2, "last_failure" => @time }
     @failure3 = { "count" => 1, "message" => @relative_file3, "last_failure" => @time }
-    @key1 = "key1"
-    @key2 = "key2"
-    @key3 = "key3"
-    @val1 = "val1"
-    @val2 = "val2"
-    @val3 = "val3"
+
   end
 end

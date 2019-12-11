@@ -3,11 +3,5 @@ require "redis"
 require "json"
 
 module ZSpec
-  require "zspec/sink"
-  require "zspec/queue"
-  require "zspec/scheduler"
-  require "zspec/tracker"
-  require "zspec/formatter"
-  require "zspec/presenter"
-  require "zspec/worker"
+  Dir["./lib/zspec/*.rb"].each {|file| require file }
 end

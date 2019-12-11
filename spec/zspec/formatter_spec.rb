@@ -22,10 +22,11 @@ describe ZSpec::Formatter do
     @failure_count = 1
     @pending_count = 0
     @duration      = 10
+    @load_time     = 0
     @errors_outside_of_examples_count = 0
 
     @summary_notification = RSpec::Core::Notifications::SummaryNotification.new(
-      @duration, @example_count, @failure_count, @pending_count, @errors_outside_of_examples_count
+      @duration, @example_count, @failure_count, @pending_count, @load_time, @errors_outside_of_examples_count
     )
   end
 
