@@ -1,0 +1,53 @@
+kind: pipeline
+name: images
+type: kubernetes
+
+steps:
+- name: bundle
+  image: ruby:2.6
+  volumes:
+  - name: ruby
+    path: /usr/local/bundle
+  commands:
+  - bundle install
+
+- name: worker
+  image: ruby:2.6
+  detach: true
+  environment:
+    ZSPEC_REDIS_HOST: redis
+    ZSPEC_REDIS_PORT: 6379
+    ZSPEC_BUILD_NUMBER: ${DRONE_BUILD_NUMBER}
+  volumes:
+  - name: ruby
+    path: /usr/local/bundle
+  commands:
+  - ./hack/worker/entrypoint.sh
+
+- name: client
+  image: ruby:2.6
+  environment:
+    ZSPEC_REDIS_HOST: redis
+    ZSPEC_REDIS_PORT: 6379
+    ZSPEC_BUILD_NUMBER: ${DRONE_BUILD_NUMBER}
+  volumes:
+  - name: ruby
+    path: /usr/local/bundle
+  commands:
+  - ./hack/client/entrypoint.sh
+
+services:
+- name: redis
+  image: redis
+  ports:
+  - 6379
+
+volumes:
+- name: ruby
+  temp: {}
+
+trigger:
+  event:
+  - pull_request
+  branch:
+  - master

@@ -1,16 +1,19 @@
 module ZSpec
   class Worker
+    APPLICATION_FILE = "/app/config/application.rb".freeze
+
+    def initialize(queue:, tracker:)
+      @queue   = queue
+      @tracker = tracker
+    end
+
     def work
-      require '/app/config/application'
-      ZSpec.config.queue.proccess_pending(1) do |spec|
+      require APPLICATION_FILE if File.exist? APPLICATION_FILE
+      @queue.proccess_pending do |spec|
         puts "running: #{spec}"
-        ZSpec.config.spec_id = spec
-        ZSpec.config.stdout = stdout = StringIO.new
         fork do
-          run_specs(spec, stdout)
+          run_specs(spec, StringIO.new)
         end
-        ZSpec.config.spec_id = nil
-        ZSpec.config.stdout = nil
         Process.waitall
         puts "completed: #{spec}"
       end
@@ -19,10 +22,13 @@ module ZSpec
     private
 
     def run_specs(spec, stdout)
-      options = ::RSpec::Core::ConfigurationOptions.new([
-        "--backtrace", "--format", "ZSpec::Formatter", spec,
-      ])
-      runner = ::RSpec::Core::Runner.new(options)
+      formatter = ZSpec::Formatter.new(
+        queue: @queue, tracker: @tracker, stdout: stdout, message: spec
+      )
+      configuration = ::RSpec.configuration
+      configuration.add_formatter(formatter)
+      options = ::RSpec::Core::ConfigurationOptions.new(["--backtrace", spec])
+      runner = ::RSpec::Core::Runner.new(options, configuration)
       def runner.trap_interrupt() end
       runner.run($stderr, stdout)
     end

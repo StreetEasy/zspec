@@ -1,33 +1,23 @@
 require "thor"
-require 'zspec'
-require 'active_support/inflector'
+require "zspec"
 
 module ZSpec
   class CLI < Thor
-    def initialize(*args)
-      super
-      configure
-    end
-
     desc "queue_specs", ""
     def queue_specs(*args)
-      ZSpec.config.scheduler.schedule(args)
+      scheduler.schedule(args)
     end
 
     desc "present", ""
     def present
-      presenter = ZSpec::Presenter.new(
-        failure_display_max: failure_display_max,
-        truncate_length: truncate_length,
-      )
-      presenter.poll_results
-      cleanup
-      presenter.print_summary
+      failed = presenter.poll_results
+      queue.cleanup
+      exit(1) if failed
     end
 
     desc "work", ""
     def work
-      ZSpec::Worker.new.work
+      worker.work
     end
 
     desc "connected", ""
@@ -37,59 +27,81 @@ module ZSpec
 
     private
 
-    def configure
-      ZSpec.configure do |config|
-        config.sink = sink
-        config.queue = ZSpec::Queue.new(
-          sink: sink,
-          queue_name: "#{build_number}:queue",
-          timeout: timeout,
-          retries: retries,
-        )
-        config.scheduler = ZSpec::Scheduler.new(
-          sink: sink,
-        )
-        config.tracker = ZSpec::Tracker.new(
-          flaky_threshold: flaky_threshold,
-          sink: sink,
-        )
-      end
+    def presenter
+      @presenter ||= ZSpec::Presenter.new(
+        queue: queue,
+        tracker: tracker,
+        display_count: presenter_display_count,
+        truncate_length: presenter_truncate_length
+      )
     end
 
-    def cleanup
-      ZSpec.config.queue.cleanup
+    def worker
+      @worker ||= ZSpec::Worker.new(
+        queue: queue,
+        tracker: tracker
+      )
     end
 
-    def build_number
-      ENV['ZSPEC_BUILD_NUMBER']
+    def queue
+      @queue ||= ZSpec::Queue.new(
+        sink: sink,
+        queue_name: queue_name,
+        timeout: queue_timeout,
+        retries: queue_retries
+      )
     end
 
-    def timeout
-      ENV["ZSPEC_TIMEOUT"] || 420
+    def tracker
+      @tracker ||= ZSpec::Tracker.new(threshold: tracker_threshold, sink: sink)
     end
 
-    def retries
-      ENV["ZSPEC_RETRIES"] || 0
-    end
-
-    def failure_display_max
-      ENV["ZSPEC_FAILURE_DISPLAY_MAX"] || 25
-    end
-
-    def truncate_length
-      ENV["ZSPEC_TRUNCATE_LENGTH"] || 2_000
-    end
-
-    def flaky_threshold
-      ENV["ZSPEC_FLAKY_THRESHOLD"] || 60 * 60 * 24 * 14
+    def scheduler
+      @scheduler ||= ZSpec::Scheduler.new(queue: queue, tracker: tracker)
     end
 
     def sink
-      ZSpec::Sink::RedisSink.new(redis: redis)
+      @sink ||= ZSpec::Sink::RedisSink.new(redis: redis)
     end
 
     def redis
-      Redis.new(host: ENV["ZSPEC_REDIS_HOST"], port: ENV["ZSPEC_REDIS_PORT"])
+      @redis ||= Redis.new(host: redis_host, port: redis_port)
+    end
+
+    def queue_name
+      "#{build_number}:queue"
+    end
+
+    def redis_host
+      ENV["ZSPEC_REDIS_HOST"]
+    end
+
+    def redis_port
+      ENV["ZSPEC_REDIS_PORT"]
+    end
+
+    def build_number
+      ENV["ZSPEC_BUILD_NUMBER"]
+    end
+
+    def queue_timeout
+      ENV["ZSPEC_QUEUE_TIMEOUT"] || 420
+    end
+
+    def queue_retries
+      ENV["ZSPEC_QUEUE_RETRIES"] || 0
+    end
+
+    def presenter_display_count
+      ENV["ZSPEC_PRESENTER_DISPLAY_COUNT"] || 25
+    end
+
+    def presenter_truncate_length
+      ENV["ZSPEC_PRESENTER_TRUNCATE_LENGTH"] || 2_000
+    end
+
+    def tracker_threshold
+      ENV["ZSPEC_TRACKER_THRESHOLD"] || 60 * 60 * 24 * 14
     end
   end
 end
