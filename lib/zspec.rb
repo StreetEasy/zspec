@@ -3,5 +3,5 @@ require "redis"
 require "json"
 
 module ZSpec
-  Dir["./lib/zspec/*.rb"].each {|file| require file }
+  Dir[File.join(__dir__, "zspec", "*.rb")].each { |file| require file }
 end
