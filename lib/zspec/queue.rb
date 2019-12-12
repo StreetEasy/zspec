@@ -3,8 +3,6 @@ module ZSpec
     attr_reader :counter_name, :pending_queue_name, :processing_queue_name,
       :done_queue_name, :metadata_hash_name, :workers_ready_key_name
 
-    EXPIRE_SECONDS = 1800
-
     def initialize(sink:, queue_name:, retries:, timeout:)
       @sink                   = sink
       @retries                = retries.to_i
@@ -17,13 +15,13 @@ module ZSpec
       @workers_ready_key_name = queue_name + ":ready"
     end
 
-    def cleanup
-      @sink.expire(@counter_name, EXPIRE_SECONDS)
-      @sink.expire(@pending_queue_name, EXPIRE_SECONDS)
-      @sink.expire(@processing_queue_name, EXPIRE_SECONDS)
-      @sink.expire(@done_queue_name, EXPIRE_SECONDS)
-      @sink.expire(@metadata_hash_name, EXPIRE_SECONDS)
-      @sink.expire(@workers_ready_key_name, EXPIRE_SECONDS)
+    def cleanup(expire=1800)
+      @sink.expire(@counter_name, expire)
+      @sink.expire(@pending_queue_name, expire)
+      @sink.expire(@processing_queue_name, expire)
+      @sink.expire(@done_queue_name, expire)
+      @sink.expire(@metadata_hash_name, expire)
+      @sink.expire(@workers_ready_key_name, expire)
     end
 
     def enqueue(messages)
@@ -49,6 +47,8 @@ module ZSpec
 
     def next_done(timeout = 0)
       expire_processing
+      # this will cleanup the test run if the client goes away
+      cleanup(10)
 
       message = @sink.brpop(@done_queue_name, timeout)
       return if message.nil? || message.empty?
