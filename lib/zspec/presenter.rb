@@ -79,8 +79,7 @@ module ZSpec
       if @tracker.current_failures.any?
         @out.puts wrap("\nFIRST #{@display_count} FLAKY SPECS CURRENT RUN:", :bold)
         @tracker.current_failures.take(@display_count).each do |failure|
-          @out.puts "#{failure['message']} failed #{failure['count']} times. " \
-            "last failure was #{humanize(Time.now.to_i - failure['last_failure'])} ago.\n"
+          @out.puts "#{failure['message']} failed #{failure['count']} times. "
         end
       end
     end
