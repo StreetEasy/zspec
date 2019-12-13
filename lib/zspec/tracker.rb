@@ -48,6 +48,8 @@ module ZSpec
       @sink.expire(@current_failures_hash_name, expire_seconds)
     end
 
+    private
+
     def time_key(message)
       "#{message}:time"
     end
@@ -55,8 +57,6 @@ module ZSpec
     def count_key(message)
       "#{message}:count"
     end
-
-    private
 
     def parse_failures(failures)
       memo = {}
