@@ -4,14 +4,13 @@ describe ZSpec::Queue do
   describe "#cleanup" do
     it "sets expirations on the queues" do
       @queue.cleanup
-      expire_seconds = 1800
       expect(@expirations).to include(
-        @queue.counter_name => expire_seconds,
-        @queue.pending_queue_name => expire_seconds,
-        @queue.processing_queue_name => expire_seconds,
-        @queue.done_queue_name => expire_seconds,
-        @queue.metadata_hash_name => expire_seconds,
-        @queue.workers_ready_key_name => expire_seconds
+        @queue.counter_name => ZSpec::EXPIRE_SECONDS,
+        @queue.pending_queue_name => ZSpec::EXPIRE_SECONDS,
+        @queue.processing_queue_name => ZSpec::EXPIRE_SECONDS,
+        @queue.done_queue_name => ZSpec::EXPIRE_SECONDS,
+        @queue.metadata_hash_name => ZSpec::EXPIRE_SECONDS,
+        @queue.workers_ready_key_name => ZSpec::EXPIRE_SECONDS
       )
     end
   end

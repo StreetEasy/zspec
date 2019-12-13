@@ -5,7 +5,7 @@ describe ZSpec::Tracker do
     it "sets expirations on the queues" do
       @tracker.cleanup
       expect(@expirations).to include(
-        @tracker.current_failures_hash_name => 1800
+        @tracker.current_failures_hash_name => ZSpec::EXPIRE_SECONDS
       )
     end
   end

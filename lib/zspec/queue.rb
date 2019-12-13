@@ -15,7 +15,7 @@ module ZSpec
       @workers_ready_key_name = build_prefix + ":ready"
     end
 
-    def cleanup(expire_seconds = 1800)
+    def cleanup(expire_seconds = EXPIRE_SECONDS)
       @sink.expire(@counter_name, expire_seconds)
       @sink.expire(@pending_queue_name, expire_seconds)
       @sink.expire(@processing_queue_name, expire_seconds)

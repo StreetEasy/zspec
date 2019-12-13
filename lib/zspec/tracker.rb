@@ -40,7 +40,7 @@ module ZSpec
         .reverse
     end
 
-    def cleanup(expire_seconds = 1800)
+    def cleanup(expire_seconds = EXPIRE_SECONDS)
       @sink.expire(@current_failures_hash_name, expire_seconds)
     end
 
