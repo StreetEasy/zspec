@@ -44,7 +44,8 @@ module ZSpec
       @out.puts "errors_outside_of_examples_count: #{@errors_outside_of_examples_count}"
 
       print_slow_specs
-      print_flaky_specs
+      print_current_flaky_specs
+      print_alltime_flaky_specs
       print_failed_specs
       print_outside_of_examples
 
@@ -74,10 +75,19 @@ module ZSpec
       end
     end
 
-    def print_flaky_specs
-      if @tracker.recent_failures.any?
-        @out.puts wrap("\nFIRST #{@display_count} FLAKY SPECS:", :bold)
-        @tracker.recent_failures.take(@display_count).each do |failure|
+    def print_current_flaky_specs
+      if @tracker.current_failures.any?
+        @out.puts wrap("\nFIRST #{@display_count} FLAKY SPECS CURRENT RUN:", :bold)
+        @tracker.current_failures.take(@display_count).each do |failure|
+          @out.puts "#{failure['message']} failed #{failure['count']} times. "
+        end
+      end
+    end
+
+    def print_alltime_flaky_specs
+      if @tracker.alltime_failures.any?
+        @out.puts wrap("\nFIRST #{@display_count} FLAKY SPECS LAST #{humanize(@tracker.threshold).upcase}:", :bold)
+        @tracker.alltime_failures.take(@display_count).each do |failure|
           @out.puts "#{failure['message']} failed #{failure['count']} times. " \
             "last failure was #{humanize(Time.now.to_i - failure['last_failure'])} ago.\n"
         end
@@ -85,7 +95,7 @@ module ZSpec
     end
 
     def print_slow_specs
-      @out.puts wrap("\n#{@display_count} SLOWEST FILES:", :bold)
+      @out.puts wrap("\n#{@display_count} SLOWEST FILES CURRENT RUN:", :bold)
       @runtimes.sort_by { |h| h[:duration] }.reverse.take(@display_count).each do |h|
         @out.puts "#{h[:file_path]} finished in #{format_duration(h[:duration])} " \
           "(file took #{format_duration(h[:load_time])} to load)\n"

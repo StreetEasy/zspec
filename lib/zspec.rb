@@ -3,5 +3,6 @@ require "redis"
 require "json"
 
 module ZSpec
+  EXPIRE_SECONDS = 1800
   Dir[File.join(__dir__, "zspec", "*.rb")].each { |file| require file }
 end
