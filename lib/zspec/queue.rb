@@ -3,27 +3,25 @@ module ZSpec
     attr_reader :counter_name, :pending_queue_name, :processing_queue_name,
       :done_queue_name, :metadata_hash_name, :workers_ready_key_name
 
-    EXPIRE_SECONDS = 1800
-
-    def initialize(sink:, queue_name:, retries:, timeout:)
+    def initialize(sink:, build_prefix:, retries:, timeout:)
       @sink                   = sink
       @retries                = retries.to_i
       @timeout                = timeout.to_i
-      @counter_name           = queue_name + ":count"
-      @pending_queue_name     = queue_name + ":pending"
-      @processing_queue_name  = queue_name + ":processing"
-      @done_queue_name        = queue_name + ":done"
-      @metadata_hash_name     = queue_name + ":metadata"
-      @workers_ready_key_name = queue_name + ":ready"
+      @counter_name           = build_prefix + ":count"
+      @pending_queue_name     = build_prefix + ":pending"
+      @processing_queue_name  = build_prefix + ":processing"
+      @done_queue_name        = build_prefix + ":done"
+      @metadata_hash_name     = build_prefix + ":metadata"
+      @workers_ready_key_name = build_prefix + ":ready"
     end
 
-    def cleanup
-      @sink.expire(@counter_name, EXPIRE_SECONDS)
-      @sink.expire(@pending_queue_name, EXPIRE_SECONDS)
-      @sink.expire(@processing_queue_name, EXPIRE_SECONDS)
-      @sink.expire(@done_queue_name, EXPIRE_SECONDS)
-      @sink.expire(@metadata_hash_name, EXPIRE_SECONDS)
-      @sink.expire(@workers_ready_key_name, EXPIRE_SECONDS)
+    def cleanup(expire_seconds = 1800)
+      @sink.expire(@counter_name, expire_seconds)
+      @sink.expire(@pending_queue_name, expire_seconds)
+      @sink.expire(@processing_queue_name, expire_seconds)
+      @sink.expire(@done_queue_name, expire_seconds)
+      @sink.expire(@metadata_hash_name, expire_seconds)
+      @sink.expire(@workers_ready_key_name, expire_seconds)
     end
 
     def enqueue(messages)

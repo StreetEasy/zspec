@@ -12,6 +12,7 @@ module ZSpec
     def present
       failed = presenter.poll_results
       queue.cleanup
+      tracker.cleanup
       exit(1) if failed
     end
 
@@ -46,14 +47,18 @@ module ZSpec
     def queue
       @queue ||= ZSpec::Queue.new(
         sink: sink,
-        queue_name: queue_name,
+        build_prefix: build_prefix,
         timeout: queue_timeout,
         retries: queue_retries
       )
     end
 
     def tracker
-      @tracker ||= ZSpec::Tracker.new(threshold: tracker_threshold, sink: sink)
+      @tracker ||= ZSpec::Tracker.new(
+        build_prefix: build_prefix,
+        threshold: tracker_threshold,
+        sink: sink
+      )
     end
 
     def scheduler
@@ -68,7 +73,7 @@ module ZSpec
       @redis ||= Redis.new(host: redis_host, port: redis_port)
     end
 
-    def queue_name
+    def build_prefix
       "#{build_number}:queue"
     end
 

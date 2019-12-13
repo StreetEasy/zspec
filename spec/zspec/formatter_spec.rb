@@ -59,7 +59,7 @@ describe ZSpec::Formatter do
     end
 
     it "tracks the failure" do
-      expect(@state).to include(@tracker.failures_hash_name => {
+      expect(@state).to include(@tracker.alltime_failures_hash_name => {
         @failed_example.id.to_s => "{\"count\":1,\"message\":\"#{@failed_example.id}\",\"last_failure\":#{@time}}"
       })
     end

@@ -8,13 +8,13 @@ RSpec.configure do |c|
     @expirations = {}
     @sink = ZSpec::Sink::MemorySink.new(state: @state, expirations: @expirations)
 
+    @build_prefix = "1:queue"
     @threshold = 100
-    @tracker = ZSpec::Tracker.new(sink: @sink, threshold: @threshold)
+    @tracker = ZSpec::Tracker.new(sink: @sink, threshold: @threshold, build_prefix: @build_prefix)
 
-    @queue_name = "1:queue"
     @retries = 2
     @timeout = 100
-    @queue = ZSpec::Queue.new(sink: @sink, queue_name: @queue_name, retries: @retries, timeout: @timeout)
+    @queue = ZSpec::Queue.new(sink: @sink, build_prefix: @build_prefix, retries: @retries, timeout: @timeout)
 
     @scheduler = ZSpec::Scheduler.new(queue: @queue, tracker: @tracker)
 
@@ -32,6 +32,5 @@ RSpec.configure do |c|
     @failure1 = { "count" => 1, "message" => @relative_file1, "last_failure" => @time }
     @failure2 = { "count" => 1, "message" => @relative_file2, "last_failure" => @time }
     @failure3 = { "count" => 1, "message" => @relative_file3, "last_failure" => @time }
-
   end
 end
