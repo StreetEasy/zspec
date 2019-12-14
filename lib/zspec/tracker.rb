@@ -5,8 +5,8 @@ module ZSpec
     def initialize(build_prefix:, sink:, threshold:)
       @sink                       = sink
       @threshold                  = threshold
-      @runtimes_hash_name         = "runtimes"
-      @alltime_failures_hash_name = "failures"
+      @runtimes_hash_name         = "runtimes:v1"
+      @alltime_failures_hash_name = "failures:v1"
       @current_failures_hash_name = build_prefix + ":failures"
     end
 
