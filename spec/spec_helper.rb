@@ -1,6 +1,8 @@
 require "zspec"
 require "pry"
 
+include ZSpec::Util
+
 RSpec.configure do |c|
   c.before :each do
     @time = 1234
