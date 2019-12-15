@@ -33,6 +33,7 @@ module ZSpec
       )
       @tracker.track_runtime(@message, @duration)
       @tracker.track_failures(@output_hash[:failures]) if @failed
+      @tracker.track_sequence(@message)
     end
 
     private

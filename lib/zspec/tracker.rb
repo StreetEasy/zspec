@@ -8,6 +8,13 @@ module ZSpec
       @runtimes_hash_name         = "runtimes:v1"
       @alltime_failures_hash_name = "failures:v1"
       @current_failures_hash_name = build_prefix + ":failures"
+      @sequence_hash_name         = build_prefix + ":sequence"
+    end
+
+    def track_sequence(message)
+      sequence = (@sink.hget(@sequence_hash_name, ENV["HOST"]) || "").split(",")
+      sequence << message
+      @sink.hset(@sequence_hash_name, ENV["HOST"], sequence.join(","))
     end
 
     def track_runtime(message, runtime)
@@ -17,9 +24,11 @@ module ZSpec
     def track_failures(failures)
       failures.map { |h| h[:id] }.each do |message|
         @sink.hincrby(@alltime_failures_hash_name, count_key(message), 1)
-        @sink.hincrby(@current_failures_hash_name, count_key(message), 1)
         @sink.hset(@alltime_failures_hash_name, time_key(message), @sink.time)
+
+        @sink.hincrby(@current_failures_hash_name, count_key(message), 1)
         @sink.hset(@current_failures_hash_name, time_key(message), @sink.time)
+        @sink.hset(@current_failures_hash_name, sequence_key(message), sequence)
       end
     end
 
@@ -46,9 +55,8 @@ module ZSpec
 
     def cleanup(expire_seconds = EXPIRE_SECONDS)
       @sink.expire(@current_failures_hash_name, expire_seconds)
+      @sink.expire(@sequence_hash_name, expire_seconds)
     end
-
-    private
 
     def time_key(message)
       "#{message}:time"
@@ -58,14 +66,25 @@ module ZSpec
       "#{message}:count"
     end
 
+    def sequence_key(message)
+      "#{message}:sequence"
+    end
+
+    private
+
+    def sequence
+      @sink.hget(@sequence_hash_name, ENV["HOST"]) || ""
+    end
+
     def parse_failures(failures)
       memo = {}
       failures.each do |key, value|
-        message = key.gsub(/\:time|\:count/, '')
+        message = key.gsub(/\:time|\:count|\:sequence/, '')
         memo[message] ||= {}
         memo[message]["message"] = message
         memo[message]["count"] = value.to_i if key.end_with?(":count")
         memo[message]["last_failure"] = value.to_i if key.end_with?(":time")
+        memo[message]["sequence"] = value.split(",") if key.end_with?(":sequence")
       end
       memo.values
     end
