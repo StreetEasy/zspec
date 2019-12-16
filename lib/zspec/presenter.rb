@@ -80,6 +80,10 @@ module ZSpec
         @out.puts wrap("\nFIRST #{@display_count} FLAKY SPECS CURRENT RUN:", :bold)
         @tracker.current_failures.take(@display_count).each do |failure|
           @out.puts "#{failure['message']} failed #{failure['count']} times. "
+          if failure["sequence"].any?
+            @out.puts "  PREVIOUS FILES:"
+            failure["sequence"].each { |spec| @out.puts "  #{spec}" }
+          end
         end
       end
     end
