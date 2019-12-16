@@ -54,6 +54,10 @@ module ZSpec
         @redis.hdel(key, field)
       end
 
+      def hincrby(key, field, value)
+        @redis.hincrby(key, field, value)
+      end
+
       def incr(key)
         @redis.incr(key)
       end

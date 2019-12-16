@@ -5,8 +5,8 @@ module ZSpec
     def initialize(build_prefix:, sink:, threshold:)
       @sink                       = sink
       @threshold                  = threshold
-      @runtimes_hash_name         = "runtimes"
-      @alltime_failures_hash_name = "failures"
+      @runtimes_hash_name         = "runtimes:v1"
+      @alltime_failures_hash_name = "failures:v1"
       @current_failures_hash_name = build_prefix + ":failures"
     end
 
@@ -16,8 +16,10 @@ module ZSpec
 
     def track_failures(failures)
       failures.map { |h| h[:id] }.each do |message|
-        save_failure(@alltime_failures_hash_name, message, update_failure(@alltime_failures_hash_name, message))
-        save_failure(@current_failures_hash_name, message, update_failure(@current_failures_hash_name, message))
+        @sink.hincrby(@alltime_failures_hash_name, count_key(message), 1)
+        @sink.hincrby(@current_failures_hash_name, count_key(message), 1)
+        @sink.hset(@alltime_failures_hash_name, time_key(message), @sink.time)
+        @sink.hset(@current_failures_hash_name, time_key(message), @sink.time)
       end
     end
 
@@ -26,18 +28,20 @@ module ZSpec
     end
 
     def alltime_failures
-      @sink.hgetall(@alltime_failures_hash_name)
-        .map(&method(:parse_failure))
-        .select(&method(:filter_by_threshold))
-        .sort_by(&method(:failure_count))
-        .reverse
+      parse_failures(
+        @sink.hgetall(@alltime_failures_hash_name)
+      )
+      .select(&method(:filter_by_threshold))
+      .sort_by(&method(:failure_count))
+      .reverse
     end
 
     def current_failures
-      @sink.hgetall(@current_failures_hash_name)
-        .map(&method(:parse_failure))
-        .sort_by(&method(:failure_count))
-        .reverse
+      parse_failures(
+        @sink.hgetall(@current_failures_hash_name)
+      )
+      .sort_by(&method(:failure_count))
+      .reverse
     end
 
     def cleanup(expire_seconds = EXPIRE_SECONDS)
@@ -46,17 +50,24 @@ module ZSpec
 
     private
 
-    def parse_failure(_message, failure)
-      JSON.parse(failure)
+    def time_key(message)
+      "#{message}:time"
     end
 
-    def update_failure(hash, message)
-      failure = JSON.parse(@sink.hget(hash, message) || "{\"count\":0}")
-      failure.merge("message" => message, "last_failure" => @sink.time, "count" => failure["count"].to_i + 1)
+    def count_key(message)
+      "#{message}:count"
     end
 
-    def save_failure(hash, message, failure)
-      @sink.hset(hash, message, failure.to_json)
+    def parse_failures(failures)
+      memo = {}
+      failures.each do |key, value|
+        message = key.gsub(/\:time|\:count/, '')
+        memo[message] ||= {}
+        memo[message]["message"] = message
+        memo[message]["count"] = value.to_i if key.end_with?(":count")
+        memo[message]["last_failure"] = value.to_i if key.end_with?(":time")
+      end
+      memo.values
     end
 
     def filter_by_threshold(failure)

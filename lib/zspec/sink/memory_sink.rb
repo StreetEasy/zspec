@@ -60,6 +60,10 @@ module ZSpec
         (@state[key] ||= {}).delete(field)
       end
 
+      def hincrby(key, field, value)
+        (@state[key] ||= {})[field] = (hget(key, field) || 0) + 1
+      end
+
       def incr(key)
         @state[key] ||= 0
         @state[key] += 1

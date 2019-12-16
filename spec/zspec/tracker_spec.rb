@@ -29,20 +29,20 @@ describe ZSpec::Tracker do
       it "increments the faulure count" do
         @tracker.track_failures([{ id: @relative_file1 }])
         @tracker.track_failures([{ id: @relative_file1 }])
-        expect(@state).to include(@tracker.alltime_failures_hash_name => {
-          @relative_file1 => @failure1.merge("count" => 2).to_json
-        })
-        expect(@state).to include(@tracker.current_failures_hash_name => {
-          @relative_file1 => @failure1.merge("count" => 2).to_json
-        })
+        expect(@state).to include(@tracker.alltime_failures_hash_name =>
+          @raw_failure1.merge("#{@relative_file1}:count" => 2)
+        )
+        expect(@state).to include(@tracker.current_failures_hash_name =>
+          @raw_failure1.merge("#{@relative_file1}:count" => 2)
+        )
       end
     end
 
     context "new failures" do
       it "stores the failures" do
         @tracker.track_failures([{ id: @relative_file1 }])
-        expect(@state).to include(@tracker.alltime_failures_hash_name => { @relative_file1 => @failure1.to_json })
-        expect(@state).to include(@tracker.current_failures_hash_name => { @relative_file1 => @failure1.to_json })
+        expect(@state).to include(@tracker.alltime_failures_hash_name => @raw_failure1)
+        expect(@state).to include(@tracker.current_failures_hash_name => @raw_failure1)
       end
     end
   end
@@ -62,7 +62,9 @@ describe ZSpec::Tracker do
       @tracker.track_failures([{ id: @relative_file1 }])
       @state[:time] = @time + @threshold
       @tracker.track_failures([{ id: @relative_file2 }])
-      expect(@tracker.alltime_failures).to eq([@failure2.merge("last_failure" => @state[:time])])
+      expect(@tracker.alltime_failures).to eq([
+        @failure2.merge("last_failure" => @state[:time])
+      ])
     end
   end
 

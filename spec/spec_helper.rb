@@ -32,5 +32,9 @@ RSpec.configure do |c|
     @failure1 = { "count" => 1, "message" => @relative_file1, "last_failure" => @time }
     @failure2 = { "count" => 1, "message" => @relative_file2, "last_failure" => @time }
     @failure3 = { "count" => 1, "message" => @relative_file3, "last_failure" => @time }
+
+    @raw_failure1 = { "#{@relative_file1}:count" => 1, "#{@relative_file1}:time" => @time }
+    @raw_failure2 = { "#{@relative_file2}:count" => 1, "#{@relative_file2}:time" => @time }
+    @raw_failure3 = { "#{@relative_file3}:count" => 1, "#{@relative_file3}:time" => @time }
   end
 end
