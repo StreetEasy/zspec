@@ -10,7 +10,7 @@ RSpec.configure do |c|
 
     @build_prefix = "1:queue"
     @threshold = 100
-    @tracker = ZSpec::Tracker.new(sink: @sink, threshold: @threshold, build_prefix: @build_prefix)
+    @tracker = ZSpec::Tracker.new(sink: @sink, threshold: @threshold, build_prefix: @build_prefix, hostname: "my-host")
 
     @retries = 2
     @timeout = 100

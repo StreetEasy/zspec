@@ -57,8 +57,13 @@ module ZSpec
       @tracker ||= ZSpec::Tracker.new(
         build_prefix: build_prefix,
         threshold: tracker_threshold,
+        hostname: hostname,
         sink: sink
       )
+    end
+
+    def hostname
+      ENV["HOSTNAME"]
     end
 
     def scheduler

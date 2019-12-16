@@ -2,9 +2,10 @@ module ZSpec
   class Tracker
     attr_reader :runtimes_hash_name, :alltime_failures_hash_name, :current_failures_hash_name, :threshold
 
-    def initialize(build_prefix:, sink:, threshold:)
+    def initialize(build_prefix:, sink:, threshold:, hostname:)
       @sink                       = sink
       @threshold                  = threshold
+      @hostname                   = hostname
       @runtimes_hash_name         = "runtimes:v1"
       @alltime_failures_hash_name = "failures:v1"
       @current_failures_hash_name = build_prefix + ":failures"
@@ -12,9 +13,9 @@ module ZSpec
     end
 
     def track_sequence(message)
-      sequence = (@sink.hget(@sequence_hash_name, ENV["HOST"]) || "").split(",")
+      sequence = (@sink.hget(@sequence_hash_name, @hostname) || "").split(",")
       sequence << message
-      @sink.hset(@sequence_hash_name, ENV["HOST"], sequence.join(","))
+      @sink.hset(@sequence_hash_name, @hostname, sequence.join(","))
     end
 
     def track_runtime(message, runtime)
@@ -73,7 +74,7 @@ module ZSpec
     private
 
     def sequence
-      @sink.hget(@sequence_hash_name, ENV["HOST"]) || ""
+      @sink.hget(@sequence_hash_name, @hostname) || ""
     end
 
     def parse_failures(failures)
