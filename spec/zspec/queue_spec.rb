@@ -32,14 +32,14 @@ describe ZSpec::Queue do
     end
   end
 
-  describe "#next_pending" do
+  describe "#pending_queue" do
     context "when there are no messages in the pending queue" do
-      it "does not yield" do
-        expect { |block| @queue.next_pending(&block) }.to_not yield_control
+      it "returns nil" do
+        expect(@queue.pending_queue.next).to eq(nil)
       end
 
       it "does not set anything in the metadata hash" do
-        @queue.next_pending
+        @queue.pending_queue.next
         expect(@state).to_not include(@queue.metadata_hash_name => {})
       end
     end
@@ -49,34 +49,34 @@ describe ZSpec::Queue do
         @queue.enqueue([@message1])
       end
 
-      it "yields the next item from the pending queue" do
-        expect { |block| @queue.next_pending(&block) }.to yield_with_args(@message1)
+      it "returns the next item from the pending queue" do
+        expect(@queue.pending_queue.next).to eq(@message1)
       end
 
       it "removes the message from the pending queue" do
-        @queue.next_pending
+        @queue.pending_queue.next
         expect(@state).to include(@queue.pending_queue_name => [])
       end
 
       it "moves the message to the processing queue" do
-        @queue.next_pending
+        @queue.pending_queue.next
         expect(@state).to include(@queue.processing_queue_name => [@message1])
       end
 
       it "adds a timeout to the metadata hash" do
-        @queue.next_pending
+        @queue.pending_queue.next
         expect(@state[@queue.metadata_hash_name][@queue.timeout_key(@message1)]).to eq(@time)
       end
     end
   end
 
-  describe "#next_done" do
+  describe "#done_queue" do
     context "when there is an expired message in the processing queue" do
       before :each do
         @queue.enqueue([@message1])
-        @queue.next_pending
+        @queue.pending_queue.next
         @state[:time] = @time + 200
-        @queue.next_done
+        @queue.done_queue.next
       end
 
       it "removes the message from the processing queue" do
@@ -93,42 +93,45 @@ describe ZSpec::Queue do
     end
 
     context "when there are no messages in the done queue" do
-      it "does not yield anything" do
-        expect { |block| @queue.next_done(&block) }.to_not yield_control
+      it "returns nil" do
+        expect(@queue.done_queue.next).to eq([nil, nil])
       end
     end
 
     context "when there are messages in the done queue" do
       before :each do
         @queue.enqueue([@message1])
+        @queue.pending_queue.next
         @queue.resolve(false, @message1, @result, @stdout)
       end
 
       it "removes the next message from the done queue" do
-        @queue.process_done
+        @queue.done_queue.next
         expect(@state).to include(@queue.done_queue_name => [])
       end
 
-      context "when the message was already seen" do
-        it "does not yield anything" do
-          @queue.next_done
+      context "when its a duplicate message" do
+        it "returns nil" do
+          @queue.done_queue.next
+          @queue.enqueue([@message1])
+          @queue.pending_queue.next
           @queue.resolve(false, @message1, @result, @stdout)
-          expect { |block| @queue.next_done(&block) }.not_to yield_control
+          expect(@queue.done_queue.next).to eq([nil, nil])
         end
       end
 
-      context "when the message was not already seen" do
-        it "yields the results and stdout" do
-          expect { |block| @queue.next_done(&block) }.to yield_with_args(@result, @stdout)
+      context "when its a new message" do
+        it "returns the results and stdout" do
+          expect(@queue.done_queue.next).to eq([@result, @stdout])
         end
 
         it "sets the dedupe key in the metadata hash" do
-          @queue.process_done
+          @queue.done_queue.next
           expect(@state[@queue.metadata_hash_name][@queue.dedupe_key(@message1)]).to eq(true)
         end
 
         it "decrements the counter key" do
-          @queue.process_done
+          @queue.done_queue.next
           expect(@state).to include(@queue.counter_name => 0)
         end
       end
@@ -138,7 +141,7 @@ describe ZSpec::Queue do
   describe "#resolve" do
     before :each do
       @queue.enqueue([@message1])
-      @queue.next_pending
+      @queue.pending_queue.next
     end
 
     context "when the spec failed" do

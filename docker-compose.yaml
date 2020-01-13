@@ -8,7 +8,7 @@ services:
     - redis:/data
 
   client:
-    image: ruby
+    image: ruby:2.6
     command: ./hack/client/entrypoint.sh
     volumes:
     - ./:/app
@@ -22,7 +22,7 @@ services:
       ZSPEC_BUILD_NUMBER: '1'
 
   worker:
-    image: ruby
+    image: ruby:2.6
     command: ./hack/worker/entrypoint.sh
     volumes:
     - ./:/app

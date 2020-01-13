@@ -4,7 +4,7 @@ describe ZSpec::Formatter do
   before :each do
     @message = "./spec/zspec/formatter_spec.rb"
     @queue.enqueue([@message1])
-    @queue.next_pending
+    @queue.pending_queue.next
 
     @formatter = ZSpec::Formatter.new(
       queue: @queue, tracker: @tracker, stdout: StringIO.new, message: @message1

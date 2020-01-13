@@ -1,7 +1,11 @@
+require "zspec/util"
+
 module ZSpec
   class Queue
     attr_reader :counter_name, :pending_queue_name, :processing_queue_name,
       :done_queue_name, :metadata_hash_name, :workers_ready_key_name
+
+    include ZSpec::Util
 
     def initialize(sink:, build_prefix:, retries:, timeout:)
       @sink                   = sink
@@ -32,44 +36,50 @@ module ZSpec
       @sink.set(@workers_ready_key_name, true)
     end
 
-    def process_done(timeout = 1, &block)
-      next_done(timeout, &block) while processing?
+    def done_queue
+      Enumerator.new do |yielder|
+        until workers_ready? && complete?
+          expire_processing
+
+          message = @sink.brpop(@done_queue_name)
+          if message.nil?
+            yielder << [nil, nil]
+            next
+          end
+
+          if @sink.hget(@metadata_hash_name, dedupe_key(message))
+            yielder << [nil, nil]
+            next
+          end
+
+          results = @sink.hget(@metadata_hash_name, results_key(message))
+          if results.nil?
+            yielder << [nil, nil]
+            next
+          end
+
+          stdout = @sink.hget(@metadata_hash_name, stdout_key(message))
+
+          @sink.hset(@metadata_hash_name, dedupe_key(message), true)
+          @sink.decr(@counter_name)
+
+          yielder << [results, stdout]
+        end
+      end
     end
 
-    def proccess_pending(timeout = 1, &block)
-      sleep 1 until workers_ready?
-
-      next_pending(timeout, &block) while processing?
-    end
-
-    # private
-    # these functions are exported for testing only
-
-    def next_done(timeout = 0)
-      expire_processing
-
-      message = @sink.brpop(@done_queue_name, timeout)
-      return if message.nil? || message.empty?
-
-      return if @sink.hget(@metadata_hash_name, dedupe_key(message))
-
-      results = @sink.hget(@metadata_hash_name, results_key(message))
-      return if results.nil? || results.empty?
-
-      stdout = @sink.hget(@metadata_hash_name, stdout_key(message))
-
-      yield(results, stdout) if block_given?
-
-      @sink.hset(@metadata_hash_name, dedupe_key(message), true)
-      @sink.decr(@counter_name)
-    end
-
-    def next_pending(timeout = 0)
-      message = @sink.brpoplpush(@pending_queue_name, @processing_queue_name, timeout)
-      return if message.nil? || message.empty?
-
-      @sink.hset(@metadata_hash_name, timeout_key(message), @sink.time)
-      yield(message) if block_given?
+    def pending_queue
+      Enumerator.new do |yielder|
+        until workers_ready? && complete?
+          message = @sink.brpoplpush(@pending_queue_name, @processing_queue_name)
+          if message.nil?
+            yielder << nil
+            next
+          end
+          @sink.hset(@metadata_hash_name, timeout_key(message), @sink.time)
+          yielder << message
+        end
+      end
     end
 
     def resolve(failed, message, results, stdout)
@@ -78,26 +88,6 @@ module ZSpec
       else
         resolve_message(message, results, stdout)
       end
-    end
-
-    def timeout_key(message)
-      "#{message}:timeout"
-    end
-
-    def stdout_key(message)
-      "#{message}:stdout"
-    end
-
-    def results_key(message)
-      "#{message}:results"
-    end
-
-    def retry_key(message)
-      "#{message}:retries"
-    end
-
-    def dedupe_key(message)
-      "#{message}:dedupe"
     end
 
     private
@@ -120,8 +110,8 @@ module ZSpec
       @sink.lrange(@processing_queue_name, 0, -1)
     end
 
-    def processing?
-      @sink.get(@counter_name).to_i > 0
+    def complete?
+      @sink.get(@counter_name).to_i == 0
     end
 
     def retry_count(message)
