@@ -29,12 +29,12 @@ module ZSpec
         @redis.rpush(key, value)
       end
 
-      def brpop(key, timeout = 0)
+      def brpop(key, timeout = 1)
         _list, message = @redis.brpop(key, timeout: timeout)
         message
       end
 
-      def brpoplpush(source, destination, timeout = 0)
+      def brpoplpush(source, destination, timeout = 1)
         @redis.brpoplpush(source, destination, timeout: timeout)
       end
 
