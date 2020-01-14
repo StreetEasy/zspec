@@ -7,7 +7,7 @@ module ZSpec
       end
 
       def time
-        @state[:time]
+        [@state[:time]]
       end
 
       def expire(key, seconds)
@@ -18,7 +18,7 @@ module ZSpec
         (@state[key] ||= []).unshift(value)
       end
 
-      def lrem(key, value)
+      def lrem(key, n, value)
         (@state[key] ||= []).delete(value)
       end
 
@@ -34,12 +34,12 @@ module ZSpec
         (@state[key] ||= []).pop
       end
 
-      def brpop(key, _timeout = 0)
-        rpop(key)
+      def brpop(key, timeout: 0)
+        return [], rpop(key)
       end
 
-      def brpoplpush(source, destination, _timeout = 0)
-        message = rpop(source)
+      def brpoplpush(source, destination, timeout: 0)
+        _list, message = brpop(source)
         lpush(destination, message)
         message
       end
