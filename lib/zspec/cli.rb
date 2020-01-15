@@ -46,7 +46,7 @@ module ZSpec
 
     def queue
       @queue ||= ZSpec::Queue.new(
-        sink: sink,
+        sink: redis,
         build_prefix: build_prefix,
         timeout: queue_timeout,
         retries: queue_retries
@@ -58,7 +58,7 @@ module ZSpec
         build_prefix: build_prefix,
         threshold: tracker_threshold,
         hostname: hostname,
-        sink: sink
+        sink: redis
       )
     end
 
@@ -68,10 +68,6 @@ module ZSpec
 
     def scheduler
       @scheduler ||= ZSpec::Scheduler.new(queue: queue, tracker: tracker)
-    end
-
-    def sink
-      @sink ||= ZSpec::Sink::RedisSink.new(redis: redis)
     end
 
     def redis

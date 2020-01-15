@@ -25,10 +25,10 @@ module ZSpec
     def track_failures(failures)
       failures.map { |h| h[:id] }.each do |message|
         @sink.hincrby(@alltime_failures_hash_name, count_key(message), 1)
-        @sink.hset(@alltime_failures_hash_name, time_key(message), @sink.time)
+        @sink.hset(@alltime_failures_hash_name, time_key(message), @sink.time.first)
 
         @sink.hincrby(@current_failures_hash_name, count_key(message), 1)
-        @sink.hset(@current_failures_hash_name, time_key(message), @sink.time)
+        @sink.hset(@current_failures_hash_name, time_key(message), @sink.time.first)
         @sink.hset(@current_failures_hash_name, sequence_key(message), sequence)
       end
     end
@@ -91,7 +91,7 @@ module ZSpec
     end
 
     def filter_by_threshold(failure)
-      (@sink.time - failure["last_failure"].to_i) < @threshold
+      (@sink.time.first - failure["last_failure"].to_i) < @threshold
     end
 
     def failure_count(failure)

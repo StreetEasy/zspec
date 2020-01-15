@@ -37,7 +37,7 @@ describe ZSpec::Sink::MemorySink do
   describe "#lrem" do
     it "removes item from the begining of the queue" do
       @sink.lpush(@key1, @val1)
-      @sink.lrem(@key1, @val1)
+      @sink.lrem(@key1, 0, @val1)
       expect(@state).to include(@key1 => [])
     end
   end

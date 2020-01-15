@@ -41,7 +41,7 @@ module ZSpec
         until workers_ready? && complete?
           expire_processing
 
-          message = @sink.brpop(@done_queue_name)
+          _list, message = @sink.brpop(@done_queue_name, timeout: 1)
           if message.nil?
             yielder << [nil, nil]
             next
@@ -71,12 +71,12 @@ module ZSpec
     def pending_queue
       Enumerator.new do |yielder|
         until workers_ready? && complete?
-          message = @sink.brpoplpush(@pending_queue_name, @processing_queue_name)
+          message = @sink.brpoplpush(@pending_queue_name, @processing_queue_name, timeout: 1)
           if message.nil?
             yielder << nil
             next
           end
-          @sink.hset(@metadata_hash_name, timeout_key(message), @sink.time)
+          @sink.hset(@metadata_hash_name, timeout_key(message), @sink.time.first)
           yielder << message
         end
       end
@@ -96,7 +96,7 @@ module ZSpec
       processing.each do |message|
         next unless expired?(message)
 
-        @sink.lrem(@processing_queue_name, message)
+        @sink.lrem(@processing_queue_name, 0, message)
         @sink.rpush(@pending_queue_name, message)
         @sink.hdel(@metadata_hash_name, timeout_key(message))
       end
@@ -120,13 +120,13 @@ module ZSpec
 
     def expired?(message)
       proccess_time = @sink.hget(@metadata_hash_name, timeout_key(message)).to_i
-      (@sink.time - proccess_time) > @timeout
+      (@sink.time.first - proccess_time) > @timeout
     end
 
     def resolve_message(message, results, stdout)
       @sink.hset(@metadata_hash_name, stdout_key(message), stdout)
       @sink.hset(@metadata_hash_name, results_key(message), results)
-      @sink.lrem(@processing_queue_name, message)
+      @sink.lrem(@processing_queue_name, 0, message)
       @sink.lpush(@done_queue_name, message)
     end
 
