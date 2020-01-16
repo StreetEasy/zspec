@@ -17,8 +17,8 @@ module ZSpec
     end
 
     desc "work", ""
-    def work
-      worker.work
+    def work(*args)
+      worker.work(args)
     end
 
     desc "connected", ""

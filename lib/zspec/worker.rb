@@ -7,13 +7,13 @@ module ZSpec
       @tracker = tracker
     end
 
-    def work
+    def work(args)
       require APPLICATION_FILE if File.exist? APPLICATION_FILE
       @queue.pending_queue.each do |spec|
         next if spec.nil?
         puts "running: #{spec}"
         fork do
-          run_specs(spec, StringIO.new)
+          run_specs(spec, args, StringIO.new)
         end
         Process.waitall
         puts "completed: #{spec}"
@@ -22,13 +22,13 @@ module ZSpec
 
     private
 
-    def run_specs(spec, stdout)
+    def run_specs(spec, args, stdout)
       formatter = ZSpec::Formatter.new(
         queue: @queue, tracker: @tracker, stdout: stdout, message: spec
       )
       configuration = ::RSpec.configuration
       configuration.add_formatter(formatter)
-      options = ::RSpec::Core::ConfigurationOptions.new(["--backtrace", spec])
+      options = ::RSpec::Core::ConfigurationOptions.new(["--backtrace", spec] + args)
       runner = ::RSpec::Core::Runner.new(options, configuration)
       def runner.trap_interrupt() end
       runner.run($stderr, stdout)
