@@ -13,8 +13,11 @@ module ZSpec
         next if spec.nil?
         puts "running: #{spec}"
         fork do
+          puts 'forked rspec'
           run_specs(spec, args, StringIO.new)
+          puts 'rspec finished'
         end
+        puts 'waiting for spec to finish'
         Process.waitall
         puts "completed: #{spec}"
       end
@@ -29,6 +32,7 @@ module ZSpec
       configuration = ::RSpec.configuration
       configuration.add_formatter(formatter)
       options = ::RSpec::Core::ConfigurationOptions.new(["--backtrace", spec] + args)
+      puts options, configuration
       runner = ::RSpec::Core::Runner.new(options, configuration)
       def runner.trap_interrupt() end
       runner.run($stderr, stdout)
