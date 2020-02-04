@@ -13,13 +13,11 @@ module ZSpec
         next if spec.nil?
         puts "running: #{spec}"
         fork do
-          puts 'forked rspec'
           run_specs(spec, args, StringIO.new)
-          puts 'rspec finished'
         end
         puts 'waiting for spec to finish'
         Process.waitall
-        puts "completed: #{spec}"
+        puts "spec finished: #{spec}"
       end
     end
 

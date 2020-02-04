@@ -13,9 +13,12 @@ module ZSpec
     end
 
     def track_sequence(message)
+      puts "tracking sequence #{message}" 
       sequence = (@sink.hget(@sequence_hash_name, @hostname) || "").split(",")
+      puts "sequence is #{sequence}"
       sequence << message
       @sink.hset(@sequence_hash_name, @hostname, sequence.join(","))
+      puts "sequence set"
     end
 
     def track_runtime(message, runtime)
