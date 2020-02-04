@@ -13,6 +13,7 @@ module ZSpec
     end
 
     def example_failed(failure)
+      puts example failed
       @failed = true
       @output_hash[:failures] << format_example(failure.example)
     end
@@ -32,7 +33,9 @@ module ZSpec
         @stdout.string
       )
       @tracker.track_runtime(@message, @duration)
+      puts tracking failures
       @tracker.track_failures(@output_hash[:failures]) if @failed
+      puts tracking sequence
       @tracker.track_sequence(@message)
     end
 
