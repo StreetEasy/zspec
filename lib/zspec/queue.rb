@@ -71,10 +71,8 @@ module ZSpec
     def pending_queue
       Enumerator.new do |yielder|
         until workers_ready? && complete?
-          puts 'from pending_queue', @pending_queue_name, @processing_queue_name
           message = @sink.brpoplpush(@pending_queue_name, @processing_queue_name, timeout: 1)
           if message.nil?
-            puts 'no pending messages'
             yielder << nil
             next
           end
