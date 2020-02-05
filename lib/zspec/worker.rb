@@ -12,10 +12,10 @@ module ZSpec
       @queue.pending_queue.each do |spec|
         next if spec.nil?
         puts "running: #{spec}"
-        fork do
+        # fork do
           run_specs(spec, StringIO.new)
-        end
-        Process.waitall
+        # end
+        # Process.waitall
         puts "completed: #{spec}"
       end
     end
