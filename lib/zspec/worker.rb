@@ -8,15 +8,15 @@ module ZSpec
     end
 
     def work(args)
-      require APPLICATION_FILE if File.exist? APPLICATION_FILE
+      # require APPLICATION_FILE if File.exist? APPLICATION_FILE
       @queue.pending_queue.each do |spec|
         next if spec.nil?
         puts "running: #{spec}"
-        fork do
+        # fork do
           run_specs(spec, args, StringIO.new)
-        end
+        # end
         puts 'waiting for spec to finish'
-        Process.waitall
+        # Process.waitall
         puts "spec finished: #{spec}"
       end
     end

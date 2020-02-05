@@ -17,6 +17,7 @@ module ZSpec
       sequence = (@sink.hget(@sequence_hash_name, @hostname) || "").split(",")
       puts "sequence is #{sequence}"
       sequence << message
+      puts "sequence with message is #{sequence}"
       @sink.hset(@sequence_hash_name, @hostname, sequence.join(","))
       puts "sequence set"
     end
