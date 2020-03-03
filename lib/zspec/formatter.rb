@@ -10,6 +10,7 @@ module ZSpec
       @queue       = queue
       @tracker     = tracker
       @stdout      = stdout
+      @start_time  = Time.now
     end
 
     def example_failed(failure)
@@ -34,9 +35,23 @@ module ZSpec
       @tracker.track_runtime(@message, @duration)
       @tracker.track_failures(@output_hash[:failures]) if @failed
       @tracker.track_sequence(@message)
+      log_trace_info
     end
 
     private
+
+    def log_trace_info
+      build_info = {
+        type: "zspec",
+        build: ENV["ZSPEC_BUILD_NUMBER"],
+        host: ENV["HOSTNAME"],
+        file: @message,
+        duration: @duration,
+        start: @start_time,
+        end: Time.now,
+      }.to_json
+      puts "#{build_info}"
+    end
 
     def format_summary(summary)
       {
