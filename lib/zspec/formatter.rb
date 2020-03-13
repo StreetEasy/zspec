@@ -4,7 +4,7 @@ module ZSpec
   class Formatter < ::RSpec::Core::Formatters::BaseFormatter
     def initialize(queue:, tracker:, stdout:, message:)
       super
-      @output_hash = { }
+      @output_hash = { failures: [] }
       @failed      = false
       @message     = message
       @queue       = queue
@@ -15,7 +15,7 @@ module ZSpec
 
     def example_failed(failure)
       @failed = true
-      (@output_hash[:failures] ||= []) << format_example(failure.example)
+      @output_hash[:failures] << format_example(failure.example)
     end
 
     def dump_summary(summary)
@@ -33,7 +33,13 @@ module ZSpec
         @stdout.string
       )
       @tracker.track_runtime(@message, @duration)
-      @tracker.track_failures(@output_hash[:failures] || [id: @message]) if @failed
+      if @failed
+        unless @output_hash[:failures].empty?
+          @tracker.track_failures(@output_hash[:failures])
+        else
+          @tracker.track_failures([id: @message])
+        end
+      end
       @tracker.track_sequence(@message)
       log_trace_info
     end
