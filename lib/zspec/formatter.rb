@@ -4,7 +4,7 @@ module ZSpec
   class Formatter < ::RSpec::Core::Formatters::BaseFormatter
     def initialize(queue:, tracker:, stdout:, message:)
       super
-      @output_hash = { failures: [] }
+      @failures    = []
       @failed      = false
       @message     = message
       @queue       = queue
@@ -13,15 +13,33 @@ module ZSpec
       @start_time  = Time.now
     end
 
+    def example_group_started(notification)
+      new_example_group = {description: notification.group.description, nested_groups: [], examples: []}
+      unless @output_hash.empty?
+        @output_hash[:nested_groups] << new_example_group
+        example_groups << @output_hash
+      end
+      @output_hash = new_example_group
+    end
+
+    def example_group_finished(notification)
+      @output_hash = example_groups.pop if example_groups.any?
+    end
+
+    def example_finished(notification)
+      @output_hash[:examples] << format_example(notification.example)
+    end
+
     def example_failed(failure)
       @failed = true
-      @output_hash[:failures] << format_example(failure.example)
+      @failures << format_example(failure.example)
     end
 
     def dump_summary(summary)
       @duration = summary.duration
       # only set to true if there is a failure, otherwise it will override the failures from example_failed
       @failed   = true if summary.errors_outside_of_examples_count.to_i > 0
+      @output_hash[:failures] = @failures
       @output_hash[:summary] = format_summary(summary)
     end
 
@@ -33,25 +51,11 @@ module ZSpec
         @stdout.string
       )
       @tracker.track_runtime(@message, @duration)
-      @tracker.track_failures(@output_hash[:failures]) if @failed
+      @tracker.track_failures(@failures) if @failed
       @tracker.track_sequence(@message)
-      log_trace_info
     end
 
     private
-
-    def log_trace_info
-      build_info = {
-        type: "zspec",
-        build: ENV["ZSPEC_BUILD_NUMBER"],
-        host: ENV["HOSTNAME"],
-        file: @message,
-        duration: @duration,
-        start: @start_time,
-        end: Time.now,
-      }.to_json
-      puts "#{build_info}"
-    end
 
     def format_summary(summary)
       {
@@ -85,6 +89,6 @@ module ZSpec
     end
 
     ::RSpec::Core::Formatters.register self,
-      :close, :dump_summary, :example_failed
+        :close, :dump_summary, :example_failed, :example_group_started, :example_group_finished, :example_finished
   end
 end

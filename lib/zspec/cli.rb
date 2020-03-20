@@ -29,12 +29,16 @@ module ZSpec
     private
 
     def presenter
-      @presenter ||= ZSpec::Presenter.new(
-        queue: queue,
-        tracker: tracker,
-        display_count: presenter_display_count,
-        truncate_length: presenter_truncate_length
-      )
+      @presenter ||= if presenter_type_documentation
+        ZSpec::Presenters::DocumentationPresenter
+      else
+        ZSpec::Presenters::BasePresenter
+      end.new(
+          queue: queue,
+          tracker: tracker,
+          display_count: presenter_display_count,
+          truncate_length: presenter_truncate_length
+        )
     end
 
     def worker
@@ -104,6 +108,10 @@ module ZSpec
 
     def presenter_truncate_length
       ENV["ZSPEC_PRESENTER_TRUNCATE_LENGTH"] || 2_000
+    end
+
+    def presenter_type_documentation
+      ENV["ZSPEC_DOCUMENTATION_PRESENTER"] || false
     end
 
     def tracker_threshold
