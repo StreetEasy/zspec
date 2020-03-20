@@ -24,6 +24,7 @@ module ZSpec
       def poll_results
         @queue.done_queue.each do |results, stdout|
           next if results.nil?
+
           present(::JSON.parse(results), stdout)
         end
         print_summary

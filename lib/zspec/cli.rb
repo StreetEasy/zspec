@@ -30,15 +30,15 @@ module ZSpec
 
     def presenter
       @presenter ||= if presenter_type_documentation
-        ZSpec::Presenters::DocumentationPresenter
-      else
-        ZSpec::Presenters::BasePresenter
+                       ZSpec::Presenters::DocumentationPresenter
+                     else
+                       ZSpec::Presenters::BasePresenter
       end.new(
-          queue: queue,
-          tracker: tracker,
-          display_count: presenter_display_count,
-          truncate_length: presenter_truncate_length
-        )
+        queue: queue,
+        tracker: tracker,
+        display_count: presenter_display_count,
+        truncate_length: presenter_truncate_length
+      )
     end
 
     def worker

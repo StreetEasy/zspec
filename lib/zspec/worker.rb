@@ -11,6 +11,7 @@ module ZSpec
       require APPLICATION_FILE if File.exist? APPLICATION_FILE
       @queue.pending_queue.each do |spec|
         next if spec.nil?
+
         puts "running: #{spec}"
         fork do
           run_specs(spec, StringIO.new)

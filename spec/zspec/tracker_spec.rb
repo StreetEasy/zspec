@@ -30,13 +30,11 @@ describe ZSpec::Tracker do
         @tracker.track_failures([{ id: @relative_file1 }])
         @tracker.track_failures([{ id: @relative_file1 }])
         expect(@state).to include(@tracker.alltime_failures_hash_name =>
-          @raw_failure1.merge(@tracker.count_key(@relative_file1) => 2)
-        )
+          @raw_failure1.merge(@tracker.count_key(@relative_file1) => 2))
         expect(@state).to include(@tracker.current_failures_hash_name =>
           @raw_failure1
           .merge(@tracker.count_key(@relative_file1) => 2)
-          .merge(@tracker.sequence_key(@relative_file1) => "")
-        )
+          .merge(@tracker.sequence_key(@relative_file1) => ""))
       end
 
       it "tracks the file sequence" do
@@ -45,9 +43,8 @@ describe ZSpec::Tracker do
         expect(@state).to include(@tracker.current_failures_hash_name =>
           @raw_failure2
           .merge(@tracker.count_key(@relative_file2) => 1)
-          .merge(@tracker.sequence_key(@relative_file2) => @relative_file1)
-         )
-       end
+          .merge(@tracker.sequence_key(@relative_file2) => @relative_file1))
+      end
     end
 
     context "new failures" do
@@ -79,8 +76,8 @@ describe ZSpec::Tracker do
       @state[:time] = @time + @threshold
       @tracker.track_failures([{ id: @relative_file2 }])
       expect(@tracker.alltime_failures).to eq([
-        @failure2.merge("last_failure" => @state[:time])
-      ])
+                                                @failure2.merge("last_failure" => @state[:time])
+                                              ])
     end
   end
 
@@ -90,9 +87,9 @@ describe ZSpec::Tracker do
       @tracker.track_failures([{ id: @relative_file1 }])
       @tracker.track_failures([{ id: @relative_file2 }])
       expect(@tracker.current_failures).to eq([
-        {"count" => 2, "last_failure" => @time, "message" => @relative_file1, "sequence"=>[]},
-        {"count" => 1, "last_failure" => @time, "message" => @relative_file2, "sequence"=>[]}
-      ])
+                                                { "count" => 2, "last_failure" => @time, "message" => @relative_file1, "sequence" => [] },
+                                                { "count" => 1, "last_failure" => @time, "message" => @relative_file2, "sequence" => [] }
+                                              ])
     end
   end
 end

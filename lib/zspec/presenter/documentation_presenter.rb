@@ -9,11 +9,11 @@ module ZSpec
       private
 
       def indent(group_level)
-        '  ' * group_level
+        "  " * group_level
       end
 
       def message(example, group_level)
-        "#{indent(group_level)}#{example["description"]}"
+        "#{indent(group_level)}#{example['description']}"
       end
 
       def passed_output(message)
@@ -33,19 +33,18 @@ module ZSpec
 
         results["examples"].each do |example|
           if example["status"] == "passed"
-            puts passed_output(message(example, group_level+1))
+            puts passed_output(message(example, group_level + 1))
           elsif example["status"] == "failed"
             @failures << example
-            puts failure_output(message(example, group_level+1))
+            puts failure_output(message(example, group_level + 1))
           elsif example["status"] == "pending"
-            puts pending_output(message(example, group_level+1))
+            puts pending_output(message(example, group_level + 1))
           end
         end
 
         results["nested_groups"].each do |nested|
-          format_results(nested, group_level+1)
+          format_results(nested, group_level + 1)
         end
-
       end
     end
   end

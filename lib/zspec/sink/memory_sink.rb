@@ -18,7 +18,7 @@ module ZSpec
         (@state[key] ||= []).unshift(value)
       end
 
-      def lrem(key, n, value)
+      def lrem(key, _n, value)
         (@state[key] ||= []).delete(value)
       end
 
@@ -35,7 +35,7 @@ module ZSpec
       end
 
       def brpop(key, timeout: 0)
-        return [], rpop(key)
+        [[], rpop(key)]
       end
 
       def brpoplpush(source, destination, timeout: 0)
@@ -60,7 +60,7 @@ module ZSpec
         (@state[key] ||= {}).delete(field)
       end
 
-      def hincrby(key, field, value)
+      def hincrby(key, field, _value)
         (@state[key] ||= {})[field] = (hget(key, field) || 0) + 1
       end
 

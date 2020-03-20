@@ -41,17 +41,17 @@ module ZSpec
       parse_failures(
         @sink.hgetall(@alltime_failures_hash_name)
       )
-      .select(&method(:filter_by_threshold))
-      .sort_by(&method(:failure_count))
-      .reverse
+        .select(&method(:filter_by_threshold))
+        .sort_by(&method(:failure_count))
+        .reverse
     end
 
     def current_failures
       parse_failures(
         @sink.hgetall(@current_failures_hash_name)
       )
-      .sort_by(&method(:failure_count))
-      .reverse
+        .sort_by(&method(:failure_count))
+        .reverse
     end
 
     def cleanup(expire_seconds = EXPIRE_SECONDS)
@@ -80,7 +80,7 @@ module ZSpec
     def parse_failures(failures)
       memo = {}
       failures.each do |key, value|
-        message = key.gsub(/\:time|\:count|\:sequence/, '')
+        message = key.gsub(/\:time|\:count|\:sequence/, "")
         memo[message] ||= {}
         memo[message]["message"] = message
         memo[message]["count"] = value.to_i if key.end_with?(":count")

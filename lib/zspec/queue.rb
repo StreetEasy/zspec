@@ -2,10 +2,9 @@ require "zspec/util"
 
 module ZSpec
   class Queue
+    include ZSpec::Util
     attr_reader :counter_name, :pending_queue_name, :processing_queue_name,
       :done_queue_name, :metadata_hash_name, :workers_ready_key_name
-
-    include ZSpec::Util
 
     def initialize(sink:, build_prefix:, retries:, timeout:)
       @sink                   = sink
