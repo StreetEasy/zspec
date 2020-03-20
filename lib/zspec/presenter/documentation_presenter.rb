@@ -4,7 +4,6 @@ module ZSpec
       def present(results, stdout)
         super
         format_results(results) if results["examples"]
-        @out.flush
       end
 
       private
@@ -30,16 +29,16 @@ module ZSpec
       end
 
       def format_results(results, group_level = 0)
-        puts message(results, group_level)
+        @out.puts message(results, group_level)
 
         results["examples"].each do |example|
           if example["status"] == "passed"
-            puts passed_output(message(example, group_level + 1))
+            @out.puts passed_output(message(example, group_level + 1))
           elsif example["status"] == "failed"
             @failures << example
-            puts failure_output(message(example, group_level + 1))
+            @out.puts failure_output(message(example, group_level + 1))
           elsif example["status"] == "pending"
-            puts pending_output(message(example, group_level + 1))
+            @out.puts pending_output(message(example, group_level + 1))
           end
         end
 
