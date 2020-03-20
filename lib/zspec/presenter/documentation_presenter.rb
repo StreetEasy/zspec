@@ -4,6 +4,7 @@ module ZSpec
       def present(results, stdout)
         super
         format_results(results) if results["examples"]
+        @out.flush
       end
 
       private
