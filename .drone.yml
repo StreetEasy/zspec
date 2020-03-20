@@ -30,6 +30,7 @@ steps:
     ZSPEC_REDIS_HOST: redis
     ZSPEC_REDIS_PORT: 6379
     ZSPEC_BUILD_NUMBER: ${DRONE_BUILD_NUMBER}
+    ZSPEC_DOCUMENTATION_PRESENTER: true
   volumes:
   - name: ruby
     path: /usr/local/bundle
