@@ -57,6 +57,10 @@ module ZSpec
 
     private
 
+    def example_groups
+      @example_groups ||= []
+    end
+
     def format_summary(summary)
       {
         duration: summary.duration,
