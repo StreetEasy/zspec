@@ -7,8 +7,8 @@ module ZSpec
 
         @queue           = queue
         @tracker         = tracker
-        @display_count   = display_count
-        @truncate_length = truncate_length
+        @display_count   = display_count.to_i
+        @truncate_length = truncate_length.to_i
         @out             = out
 
         @failures                   = []
