@@ -4,13 +4,13 @@ module ZSpec
   class Formatter < ::RSpec::Core::Formatters::BaseFormatter
     def initialize(queue:, tracker:, stdout:, message:)
       super
-      @output_hash = { failures: [] }
-      @failed      = false
-      @message     = message
-      @queue       = queue
-      @tracker     = tracker
-      @stdout      = stdout
-      @start_time  = Time.now
+      @output_hash                = { failures: [] }
+      @failed                     = false
+      @errors_outside_of_examples = false
+      @message                    = message
+      @queue                      = queue
+      @tracker                    = tracker
+      @stdout                     = stdout
     end
 
     def example_failed(failure)
@@ -21,7 +21,10 @@ module ZSpec
     def dump_summary(summary)
       @duration = summary.duration
       # only set to true if there is a failure, otherwise it will override the failures from example_failed
-      @failed   = true if summary.errors_outside_of_examples_count.to_i > 0
+      if summary.errors_outside_of_examples_count.to_i > 0
+        @failed                     = true
+        @errors_outside_of_examples = true
+      end
       @output_hash[:summary] = format_summary(summary)
     end
 
@@ -35,23 +38,10 @@ module ZSpec
       @tracker.track_runtime(@message, @duration)
       @tracker.track_failures(@output_hash[:failures]) if @failed
       @tracker.track_sequence(@message)
-      log_trace_info
+      raise if @errors_outside_of_examples
     end
 
     private
-
-    def log_trace_info
-      build_info = {
-        type: "zspec",
-        build: ENV["ZSPEC_BUILD_NUMBER"],
-        host: ENV["HOSTNAME"],
-        file: @message,
-        duration: @duration,
-        start: @start_time,
-        end: Time.now,
-      }.to_json
-      puts "#{build_info}"
-    end
 
     def format_summary(summary)
       {

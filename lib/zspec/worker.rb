@@ -16,6 +16,7 @@ module ZSpec
           run_specs(spec, StringIO.new)
         end
         Process.waitall
+        fail if $?.exitstatus != 0
         puts "completed: #{spec}"
       end
     end
