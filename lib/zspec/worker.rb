@@ -2,9 +2,10 @@ module ZSpec
   class Worker
     APPLICATION_FILE = "/app/config/application.rb".freeze
 
-    def initialize(queue:, tracker:)
+    def initialize(queue:, tracker:, tracer:)
       @queue   = queue
       @tracker = tracker
+      @tracer  = tracer
     end
 
     def work
@@ -12,10 +13,12 @@ module ZSpec
       @queue.pending_queue.each do |spec|
         next if spec.nil?
         puts "running: #{spec}"
+        id = @tracer.start_spec(spec) unless @tracer.nil?
         fork do
           run_specs(spec, StringIO.new)
         end
         Process.waitall
+        @tracer.end_spec(id) unless @tracer.nil?
         fail if $?.exitstatus != 0
         puts "completed: #{spec}"
       end

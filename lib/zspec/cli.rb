@@ -6,6 +6,7 @@ module ZSpec
     desc "queue_specs", ""
     def queue_specs(*args)
       scheduler.schedule(args)
+      tracer.start_build
     end
 
     desc "present", ""
@@ -13,12 +14,15 @@ module ZSpec
       failed = presenter.poll_results
       queue.cleanup
       tracker.cleanup
+      tracer.stop_build
       exit(1) if failed
     end
 
     desc "work", ""
     def work
+      id = tracer.start_worker
       worker.work
+      tracer.stop_worker(id)
     end
 
     desc "connected", ""
@@ -40,7 +44,8 @@ module ZSpec
     def worker
       @worker ||= ZSpec::Worker.new(
         queue: queue,
-        tracker: tracker
+        tracker: tracker,
+        tracer: tracer
       )
     end
 
@@ -58,8 +63,12 @@ module ZSpec
         build_prefix: build_prefix,
         threshold: tracker_threshold,
         hostname: hostname,
-        sink: redis
+        sink: redis,
       )
+    end
+
+    def tracer
+      @tracer ||= ZSpec::Tracer.new
     end
 
     def hostname

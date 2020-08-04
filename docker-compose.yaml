@@ -7,6 +7,17 @@ services:
     volumes:
     - redis:/data
 
+  postgres:
+    image: postgres
+    expose:
+    - 5432
+    volumes:
+    - postgres:/var/lib/postgresql/data
+    environment:
+      POSTGRES_PASSWORD: zspec
+      POSTGRES_USER: zspec
+      POSTGRES_DB: zspec
+
   client:
     image: ruby:2.6
     command: ./hack/client/entrypoint.sh
@@ -15,11 +26,18 @@ services:
     - bundle:/usr/local/bundle
     depends_on:
     - redis
+    - postgres
     working_dir: /app
     environment:
       ZSPEC_REDIS_HOST: redis
       ZSPEC_REDIS_PORT: 6379
       ZSPEC_BUILD_NUMBER: '1'
+      ZSPEC_POSTGRES_HOST: postgres
+      ZSPEC_POSTGRES_USER: zspec
+      ZSPEC_POSTGRES_DB: zspec
+      ZSPEC_POSTGRES_PASSWORD: zspec
+      NODE_NAME: zspec-node
+      POD_NAME: zspec-pod
 
   worker:
     image: ruby:2.6
@@ -30,12 +48,20 @@ services:
     depends_on:
     - redis
     - client
+    - postgres
     working_dir: /app
     environment:
       ZSPEC_REDIS_HOST: redis
       ZSPEC_REDIS_PORT: 6379
       ZSPEC_BUILD_NUMBER: '1'
+      ZSPEC_POSTGRES_HOST: postgres
+      ZSPEC_POSTGRES_USER: zspec
+      ZSPEC_POSTGRES_DB: zspec
+      ZSPEC_POSTGRES_PASSWORD: zspec
+      NODE_NAME: zspec-node
+      POD_NAME: zspec-pod
 
 volumes:
   bundle:
   redis:
+  postgres:

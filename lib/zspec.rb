@@ -1,6 +1,7 @@
 require "rspec/core"
 require "redis"
 require "json"
+require "pg"
 
 module ZSpec
   EXPIRE_SECONDS = 1800
