@@ -41,7 +41,7 @@ module ZSpec
         until workers_ready? && complete?
           expire_processing
 
-          _list, message = @sink.brpop(@done_queue_name, timeout: 1)
+          _list, message = @sink.brpop(@done_queue_name, timeout: 30)
           if message.nil?
             yielder << [nil, nil]
             next
@@ -71,7 +71,7 @@ module ZSpec
     def pending_queue
       Enumerator.new do |yielder|
         until workers_ready? && complete?
-          message = @sink.brpoplpush(@pending_queue_name, @processing_queue_name, timeout: 1)
+          message = @sink.brpoplpush(@pending_queue_name, @processing_queue_name, timeout: 30)
           if message.nil?
             yielder << nil
             next
