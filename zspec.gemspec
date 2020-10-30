@@ -22,9 +22,11 @@ Gem::Specification.new do |spec|
     `git ls-files -z`.split("\x0").reject { |f| f.match(%r{^(test|spec|features)/}) }
   end
 
-  spec.add_dependency "jira-ruby"
   spec.add_dependency "redis"
   spec.add_dependency "thor"
+  spec.add_dependency 'activesupport'
+  spec.add_dependency 'multipart-post'
+  spec.add_dependency 'oauth'
 
   spec.add_development_dependency "bundler", "~> 1.17"
   spec.add_development_dependency "pry", "~> 0.12.2"

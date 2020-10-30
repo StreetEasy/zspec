@@ -1,7 +1,7 @@
 require "rspec/core"
 require "redis"
 require "json"
-require "jira-ruby"
+require "jira-ruby/jira-ruby"
 
 module ZSpec
   EXPIRE_SECONDS = 1800
