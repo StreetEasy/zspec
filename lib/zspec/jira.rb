@@ -11,12 +11,13 @@ module ZSpec
     def report
       @tracker.current_failures.each do |failure|
         message = failure["message"]
-        next unless alltime_failures.key?(message)
+
+        alltime_failure = alltime_failures[message]
+        next if alltime_failure.nil?
 
         issue = issues[zpsec_key(message)]
-
         if issue.nil?
-          create_issue(failure) unless issues.key?(zpsec_key(message))
+          create_issue(alltime_failure) unless issues.key?(zpsec_key(message))
         elsif issue.status.name == "Done"
           issue.transitions.build.save("transition" => { "id" => @transition_id })
         end
