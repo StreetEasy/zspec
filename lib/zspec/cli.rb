@@ -13,6 +13,7 @@ module ZSpec
       failed = presenter.poll_results
       queue.cleanup
       tracker.cleanup
+      jira.report
       exit(1) if failed
     end
 
@@ -62,10 +63,6 @@ module ZSpec
       )
     end
 
-    def hostname
-      ENV["HOSTNAME"]
-    end
-
     def scheduler
       @scheduler ||= ZSpec::Scheduler.new(queue: queue, tracker: tracker)
     end
@@ -74,8 +71,48 @@ module ZSpec
       @redis ||= Redis.new(host: redis_host, port: redis_port)
     end
 
+    def jira
+      @jira ||= ZSpec::Jira.new(
+        tracker: tracker,
+        project_name: jira_project,
+        transition_id: jira_transition_id,
+        issue_count: presenter_display_count,
+        jira_client: JIRA::Client.new(
+          username: jira_username,
+          password: jira_password,
+          site: jira_site,
+          context_path: "",
+          auth_type: :basic
+        )
+      )
+    end
+
     def build_prefix
       "#{build_number}:queue"
+    end
+
+    def jira_transition_id
+      ENV["JIRA_TRANSITION_ID"]
+    end
+
+    def jira_project
+      ENV["JIRA_PROJECT"]
+    end
+
+    def jira_site
+      ENV["JIRA_SITE"]
+    end
+
+    def jira_username
+      ENV["JIRA_USERNAME"]
+    end
+
+    def jira_password
+      ENV["JIRA_PASSWORD"]
+    end
+
+    def hostname
+      ENV["HOSTNAME"]
     end
 
     def redis_host
