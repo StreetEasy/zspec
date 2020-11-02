@@ -75,7 +75,6 @@ module ZSpec
       @jira ||= ZSpec::Jira.new(
         tracker: tracker,
         project_name: jira_project,
-        transition_id: jira_transition_id,
         issue_count: presenter_display_count,
         jira_client: JIRA::Client.new(
           username: jira_username,
@@ -89,10 +88,6 @@ module ZSpec
 
     def build_prefix
       "#{build_number}:queue"
-    end
-
-    def jira_transition_id
-      ENV["JIRA_TRANSITION_ID"]
     end
 
     def jira_project
