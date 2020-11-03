@@ -1,10 +1,12 @@
 module ZSpec
   class Jira
-    def initialize(jira_client:, issue_count:, project_name:, transition_id:, tracker:)
+    CLOSED_TRANSITIONS = ["Closed", "Done", "Won't Do", "CLOSED", "DONE", "WON'T DO"].freeze
+    OPEN_TRANSITIONS = ["Reopened", "Open", "To Do", "REOPENED", "OPEN", "TO DO"].freeze
+
+    def initialize(jira_client:, issue_count:, project_name:, tracker:)
       @jira_client   = jira_client
       @issue_count   = issue_count
       @project_name  = project_name
-      @transition_id = transition_id
       @tracker       = tracker
     end
 
@@ -18,8 +20,8 @@ module ZSpec
         issue = issues[zpsec_key(message)]
         if issue.nil?
           create_issue(alltime_failure)
-        elsif issue.status.name == "Done"
-          save_issue(issue, alltime_failure)
+        elsif closed?(issue)
+          update_issue(issue, alltime_failure)
           transition_issue(issue)
         end
       end
@@ -29,15 +31,7 @@ module ZSpec
     private
 
     def create_issue(failure)
-      save_issue(@jira_client.Issue.build, failure)
-    end
-
-    def transition_issue(issue)
-      issue.transitions.build.save("transition" => { "id" => @transition_id })
-    end
-
-    def save_issue(issue, failure)
-      issue.save(
+      @jira_client.Issue.build.issue.save(
         "fields" => {
           "summary" => zpsec_key(failure["message"]),
           "description" => "#{failure['message']} failed #{failure['count']} times.",
@@ -52,19 +46,35 @@ module ZSpec
       )
     end
 
+    def update_issue(issue, failure)
+      issue.save(
+        "fields" => {
+          "description" => "#{failure['message']} failed #{failure['count']} times."
+        }
+      )
+    end
+
+    def transition_issue(issue)
+      issue.transitions.build.save("transition" => { "id" => get_open_transition_id(issue) })
+    end
+
     def alltime_failures
       @alltime_failures ||= @tracker.alltime_failures.take(@issue_count)
         .to_h { |failure| [failure["message"], failure] }
     end
 
-    def project
-      @project ||= @jira_client.Project.find(@project_name)
-    end
-
     def issues
-      @issues ||= project.issues.to_h { |issue| [issue.summary, issue] }
+      @issues ||= @jira_client.Issue.jql('labels = "flake"', expand: %w(transitions))
+        .to_h { |issue| [issue.summary, issue] }
     end
 
+    def get_open_transition_id(issue)
+      issue.transitions.select { |t| OPEN_TRANSITIONS.include? t.name }.first.id
+    end
+
+    def closed?(issue)
+      issue.transitions.select { |t| CLOSED_TRANSITIONS.include? t.name }.any? { |t| t.name == issue.status.name }
+    end
 
     def zpsec_key(message)
       "ZSPEC: #{message}"
