@@ -111,7 +111,7 @@ module ZSpec
     end
 
     def print_runtimes_by_path
-      @out.puts wrap("RUNTIMES BY PATH", :bold)
+      @out.puts wrap("\nRUNTIMES BY PATH", :bold)
       @runtimes_by_path.each do |k, v|
         @out.puts "#{k} finished in #{format_duration(v)}"
       end
