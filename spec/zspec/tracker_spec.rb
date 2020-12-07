@@ -95,4 +95,21 @@ describe ZSpec::Tracker do
       ])
     end
   end
+
+  describe "#expire_failures" do
+    it "removes expired failures" do
+      @state[:time] = @time - @threshold
+
+      @tracker.track_failures([{ id: @relative_file1 }])
+      @tracker.track_failures([{ id: @relative_file2 }])
+
+      @state[:time] = @time
+
+      @tracker.track_failures([{ id: @relative_file1 }])
+
+      @tracker.expire_failures
+
+      expect(@tracker.alltime_failures).to eq([@failure1.merge("count" => 2)])
+    end
+  end
 end
