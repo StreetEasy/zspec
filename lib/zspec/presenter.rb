@@ -112,7 +112,7 @@ module ZSpec
 
     def print_runtimes_by_path
       @out.puts wrap("\nRUNTIMES BY PATH", :bold)
-      @runtimes_by_path.each do |k, v|
+      @runtimes_by_path.sort_by{|k, v| v }.reverse.each do |k, v|
         @out.puts "#{k} finished in #{format_duration(v)}"
       end
     end
