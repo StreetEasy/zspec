@@ -147,7 +147,7 @@ module ZSpec
     def track_runtimes_by_path(results)
       key = (results.dig("summary", "file_path") || "").split("/", 4).take(3).join("/")
       val = results.dig("summary", "duration").to_i
-      @runtimes_by_path[key] = 0 if @runtimes_by_path[key].nil?
+      @runtimes_by_path[key] ||= 0
       @runtimes_by_path[key] += val
     end
 
