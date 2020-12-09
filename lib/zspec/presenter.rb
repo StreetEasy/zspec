@@ -13,6 +13,7 @@ module ZSpec
       @failures                   = []
       @errors_outside_of_examples = []
       @runtimes                   = []
+      @runtimes_by_path           = {}
 
       @example_count                    = 0
       @failure_count                    = 0
@@ -34,6 +35,7 @@ module ZSpec
       track_counts(results)
       track_errors_outside_of_examples(results, stdout)
       track_runtimes(results)
+      track_runtimes_by_path(results)
       track_failures(results)
     end
 
@@ -44,6 +46,7 @@ module ZSpec
       @out.puts "pending_count: #{@pending_count}"
       @out.puts "errors_outside_of_examples_count: #{@errors_outside_of_examples_count}"
 
+      print_runtimes_by_path
       print_slow_specs
       print_current_flaky_specs
       print_alltime_flaky_specs
@@ -107,6 +110,13 @@ module ZSpec
       end
     end
 
+    def print_runtimes_by_path
+      @out.puts wrap("\nRUNTIMES BY PATH", :bold)
+      @runtimes_by_path.sort_by{|k, v| v }.reverse.each do |k, v|
+        @out.puts "#{k} finished in #{format_duration(v)}"
+      end
+    end
+
     def track_failures(results)
       results["failures"].each do |example|
         @failures << example
@@ -132,6 +142,13 @@ module ZSpec
         duration: results["summary"]["duration"],
         load_time: results["summary"]["load_time"]
       }
+    end
+
+    def track_runtimes_by_path(results)
+      key = results.dig("summary", "file_path")&.split("/", 4)&.take(3)&.join("/") || ""
+      val = results.dig("summary", "duration").to_i
+      @runtimes_by_path[key] ||= 0
+      @runtimes_by_path[key] += val
     end
 
     def humanize(secs)

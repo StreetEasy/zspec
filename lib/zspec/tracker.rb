@@ -33,6 +33,15 @@ module ZSpec
       end
     end
 
+    def expire_failures
+      parse_failures(@sink.hgetall(@alltime_failures_hash_name))
+      .select(&method(:filter_more_than_threshold))
+      .each do |failure|
+        @sink.hdel(@alltime_failures_hash_name, count_key(failure['message']))
+        @sink.hdel(@alltime_failures_hash_name, time_key(failure['message']))
+      end
+    end
+
     def all_runtimes
       @sink.hgetall(@runtimes_hash_name)
     end
@@ -41,7 +50,7 @@ module ZSpec
       parse_failures(
         @sink.hgetall(@alltime_failures_hash_name)
       )
-      .select(&method(:filter_by_threshold))
+      .select(&method(:filter_less_than_threshold))
       .sort_by(&method(:failure_count))
       .reverse
     end
@@ -57,6 +66,7 @@ module ZSpec
     def cleanup(expire_seconds = EXPIRE_SECONDS)
       @sink.expire(@current_failures_hash_name, expire_seconds)
       @sink.expire(@sequence_hash_name, expire_seconds)
+      expire_failures
     end
 
     def time_key(message)
@@ -90,8 +100,12 @@ module ZSpec
       memo.values
     end
 
-    def filter_by_threshold(failure)
+    def filter_less_than_threshold(failure)
       (@sink.time.first - failure["last_failure"].to_i) < @threshold
+    end
+
+    def filter_more_than_threshold(failure)
+      (@sink.time.first - failure["last_failure"].to_i) >= @threshold
     end
 
     def failure_count(failure)

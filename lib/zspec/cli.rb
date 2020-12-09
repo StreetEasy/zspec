@@ -13,7 +13,7 @@ module ZSpec
       failed = presenter.poll_results
       queue.cleanup
       tracker.cleanup
-      jira.report
+      jira.report if jira_branch == current_branch
       exit(1) if failed
     end
 
@@ -88,6 +88,14 @@ module ZSpec
 
     def build_prefix
       "#{build_number}:queue"
+    end
+
+    def current_branch
+      ENV["CURRENT_BRANCH"]
+    end
+
+    def jira_branch
+      ENV["JIRA_BRANCH"]
     end
 
     def jira_project
